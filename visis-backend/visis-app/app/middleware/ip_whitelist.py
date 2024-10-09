@@ -2,7 +2,7 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
 # List of whitelisted IPs
-WHITELISTED_IPS = ["127.0.0.1", "192.168.1.1","98.97.79.27"]  # Add your IPs here
+WHITELISTED_IPS = ["127.0.0.1", "192.168.1.1","98.97.79.27","102.90.46.87"]  # Add your IPs here
 
 async def validate_ip(request: Request, call_next):
     # Get the client's IP address
