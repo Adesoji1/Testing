@@ -8,8 +8,6 @@ __pycache__/
 
 # Environment variables
 visis-backend/visis-app/.env
-
-Testing/visis-backend/visis-app/vinsightenv
 visis-app/.env/
 visis-backend/visis-app/vinsightenv/
 
