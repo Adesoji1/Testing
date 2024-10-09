@@ -1,3 +1,4 @@
+```
 File Structure
 visis-app/
 ├── .venv/
@@ -70,7 +71,7 @@ visis-app/
 ├── requirements.txt
 └── README.md
 
-
+```
 
 ## Setup Instructions
 
