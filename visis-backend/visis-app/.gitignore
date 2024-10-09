@@ -1,0 +1,33 @@
+# Ignore virtual environment
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment variables
+.env
+visis-app/vinsightenv
+visis-app/.env
+
+# Ignore Docker-related files (optional)
+*.log
+docker-compose.override.yml
+
+# Ignore Pytest cache
+.pytest_cache/
+
+# Ignore coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# Ignore migrations (optional, based on setup)
+migrations/
+
+# Ignore IDE specific files
+.vscode/
+.vscode/
+.idea/
+
