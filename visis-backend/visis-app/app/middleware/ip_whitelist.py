@@ -1,18 +1,22 @@
+import os
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
-# Allow access for frontend ports (e.g., React Native running on port 8081 or 3000)
-ALLOWED_PORTS = ["8081", "3000","10000"]  # Modify this list to add more ports if necessary
+# Get the port from the environment (Render sets this dynamically)
+RENDER_PORT = os.getenv("PORT", "10000")  # Default to 10000 if not set
+
+# Allow access for frontend ports and the dynamically assigned Render port
+ALLOWED_PORTS = ["8081", "3000", RENDER_PORT]
 
 async def validate_ip(request: Request, call_next):
-    # Get the client's IP address
-    client_ip = request.client.host
+    # Get the request's port
+    port = request.url.port
 
-    # Check if the request is coming from the allowed ports
-    if str(request.url.port) not in ALLOWED_PORTS:
+    # Allow requests from any IP address but restrict ports
+    if port is None or str(port) not in ALLOWED_PORTS:
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
-            content={"message": f"Port {request.url.port} is not allowed to access this resource."}
+            content={"message": f"Port {port} is not allowed to access this resource."}
         )
 
     # Proceed with the request if the port is allowed
