@@ -12,8 +12,12 @@ async def validate_ip(request: Request, call_next):
     # Get the request's port
     port = request.url.port
 
-    # Allow requests from any IP address but restrict ports
-    if port is None or str(port) not in ALLOWED_PORTS:
+    # Allow if the port is None (e.g., no port specified in the request)
+    if port is None:
+        return await call_next(request)
+
+    # Allow requests from the allowed ports
+    if str(port) not in ALLOWED_PORTS:
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
             content={"message": f"Port {port} is not allowed to access this resource."}
