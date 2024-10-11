@@ -2,7 +2,7 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
 # Allow access for frontend ports (e.g., React Native running on port 8081 or 3000)
-ALLOWED_PORTS = ["8081", "3000"]  # Modify this list to add more ports if necessary
+ALLOWED_PORTS = ["8081", "3000","10000"]  # Modify this list to add more ports if necessary
 
 async def validate_ip(request: Request, call_next):
     # Get the client's IP address
