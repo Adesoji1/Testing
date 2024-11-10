@@ -15,3 +15,5 @@ class FeedbackResponse(FeedbackBase):
 
     class Config:
         from_attributes = True
+
+

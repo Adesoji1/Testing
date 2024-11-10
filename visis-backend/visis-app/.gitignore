@@ -1,5 +1,5 @@
 # Ignore virtual environment
-venv/
+/.venv
 
 # Python cache files
 __pycache__/
@@ -7,10 +7,7 @@ __pycache__/
 *.pyo
 
 # Environment variables
-visis-backend/visis-app/.env
-visis-app/.env/
-visis-backend/visis-app/vinsightenv/
-
+.env
 
 # Ignore Docker-related files (optional)
 *.log
@@ -29,6 +26,4 @@ migrations/
 
 # Ignore IDE specific files
 .vscode/
-.vscode/
 .idea/
-

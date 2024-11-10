@@ -14,6 +14,7 @@ class User(Base):
     user_type = Column(String, default="user", nullable=True)
     registration_date = Column(DateTime, default=datetime.utcnow)
     last_login_date = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    refresh_token = Column(String, nullable=True)
 
     preferences = relationship("UserPreference", back_populates="user")
     documents = relationship("Document", back_populates="user")

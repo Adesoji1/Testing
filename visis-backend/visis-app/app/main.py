@@ -1,34 +1,3 @@
-# from fastapi import FastAPI
-# from app.api.endpoints.admin import admin_users, admin_documents, admin_settings
-# from app.api.endpoints.user import auth, documents, audiobooks, bookmarks, preferences, scanning, accessibility, languages, activities, feedback
-# from app.database import init_db
-
-# app = FastAPI()
-
-# # Initialize the database
-# init_db()
-
-# # Include admin routers
-# app.include_router(admin_users.router)
-# app.include_router(admin_documents.router)
-# app.include_router(admin_settings.router)
-
-# # Include user routers
-# app.include_router(auth.router)
-# app.include_router(documents.router)
-# # app.include_router(audiobooks.router)
-# app.include_router(bookmarks.router)
-# app.include_router(preferences.router)
-# app.include_router(scanning.router)
-# # app.include_router(accessibility.router)
-# app.include_router(languages.router)
-# app.include_router(activities.router)
-# # app.include_router(feedback.router)
-
-# @app.get("/")
-# async def read_root():
-#     return {"message": "Visis App API is running"}
-
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
@@ -36,6 +5,9 @@ from app.api.endpoints.admin import admin_users, admin_documents, admin_settings
 from app.api.endpoints.user import auth, documents, bookmarks, preferences, scanning, languages, activities
 from app.database import init_db
 from app.middleware.ip_whitelist import validate_ip
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 # Initialize the FastAPI app
 app = FastAPI()
@@ -97,4 +69,3 @@ async def unprocessable_entity_error_handler(request: Request, exc: Exception):
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"message": "Unprocessable Entity: The server understands the content type of the request entity, and the syntax of the request entity is correct, but it was unable to process the contained instructions."},
     )
-

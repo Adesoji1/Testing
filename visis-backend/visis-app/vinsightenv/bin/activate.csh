@@ -8,7 +8,7 @@ alias deactivate 'test $?_OLD_VIRTUAL_PATH != 0 && setenv PATH "$_OLD_VIRTUAL_PA
 # Unset irrelevant variables.
 deactivate nondestructive
 
-setenv VIRTUAL_ENV "/home/adesoji/Stageenv/Testing/visis-backend/visis-app/vinsightenv"
+setenv VIRTUAL_ENV "/home/adesoji/Documents/Visis_revisions/visis4/visis-app/vinsightenv"
 
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/bin:$PATH"

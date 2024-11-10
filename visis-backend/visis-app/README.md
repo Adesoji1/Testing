@@ -1,18 +1,17 @@
-```
 File Structure
 visis-app/
-├── .venv/
+├── .venv/                      # Virtual environment
 ├── app/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── api/
+│   ├── __init__.py             # Initialize the app module
+│   ├── main.py                 # Main application entry point
+│   ├── api/                    # API endpoints
 │   │   ├── endpoints/
-│   │   │   ├── admin/
+│   │   │   ├── admin/          # Admin-specific endpoints
 │   │   │   │   ├── __init__.py
 │   │   │   │   ├── users.py
 │   │   │   │   ├── documents.py
 │   │   │   │   ├── settings.py
-│   │   │   ├── user/
+│   │   │   ├── user/           # User-specific endpoints
 │   │   │   │   ├── __init__.py
 │   │   │   │   ├── auth.py
 │   │   │   │   ├── documents.py
@@ -24,26 +23,13 @@ visis-app/
 │   │   │   │   ├── languages.py
 │   │   │   │   ├── activities.py
 │   │   │   │   ├── feedback.py
-│   ├── core/
+│   │   │   ├── middleware/      # Middleware
+│   │   │   │   ├── ip_whitelist.py
+│   ├── core/                   # Core functionalities
 │   │   ├── __init__.py
-│   │   ├── config.py
-│   │   └── security.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── user.py
-│   │   ├── document.py
-│   │   ├── audiofile.py
-│   │   ├── user_preference.py
-│   │   ├── user_bookmark.py
-│   │   ├── scanning_history.py
-│   │   ├── accessibility.py
-│   │   ├── language.py
-│   │   ├── document_language.py
-│   │   ├── audiobook_language.py
-│   │   ├── user_activity.py
-│   │   ├── feedback.py
-│   │   └── app_setting.py
-│   ├── schemas/
+│   │   ├── config.py           # Configuration settings
+│   │   └── security.py         # Security-related functionalities
+│   ├── models/                 # Database models
 │   │   ├── __init__.py
 │   │   ├── user.py
 │   │   ├── document.py
@@ -58,20 +44,35 @@ visis-app/
 │   │   ├── user_activity.py
 │   │   ├── feedback.py
 │   │   └── app_setting.py
-│   └── services/
-│       ├── __init__.py
-│       └── document_service.py
-│   └── utils/
-│       ├── __init__.py
-│       └── helpers.py
-├── tests/
+│   ├── schemas/                # Pydantic schemas
+│   │   ├── __init__.py
+│   │   ├── user.py
+│   │   ├── document.py
+│   │   ├── audiofile.py
+│   │   ├── user_preference.py
+│   │   ├── user_bookmark.py
+│   │   ├── scanning_history.py
+│   │   ├── accessibility.py
+│   │   ├── language.py
+│   │   ├── document_language.py
+│   │   ├── audiobook_language.py
+│   │   ├── user_activity.py
+│   │   ├── feedback.py
+│   │   └── app_setting.py
+│   ├── services/               # Business logic and services
+│   │   ├── __init__.py
+│   │   └── document_service.py
+│   ├── utils/                  # Utility functions
+│   │   ├── __init__.py
+│   │   ├── helpers.py
+│   │   └── send_reset_password_email.py
+├── tests/                      # Unit tests
 │   ├── __init__.py
 │   └── test_main.py
-├── .env
-├── requirements.txt
-└── README.md
+├── .env                        # Environment variables
+├── requirements.txt            # Python dependencies
+└── README.md                   # Project documentation
 
-```
 
 ## Setup Instructions
 

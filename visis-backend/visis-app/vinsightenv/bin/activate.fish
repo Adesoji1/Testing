@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/adesoji/Stageenv/Testing/visis-backend/visis-app/vinsightenv"
+set -gx VIRTUAL_ENV "/home/adesoji/Documents/Visis_revisions/visis4/visis-app/vinsightenv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

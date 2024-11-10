@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/home/adesoji/Stageenv/Testing/visis-backend/visis-app/vinsightenv"
+VIRTUAL_ENV="/home/adesoji/Documents/Visis_revisions/visis4/visis-app/vinsightenv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
