@@ -149,6 +149,45 @@ async def list_documents(
             detail="Failed to retrieve documents",
         )
 
+#This endpoint allows you to check the processing status of a specific document, including its audio_url if processing is complete.
+
+@router.get("/{document_id}", response_model=DocumentResponse, status_code=status.HTTP_200_OK)
+def get_document_status(
+    document_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """
+    Retrieve the processing status of a single document.
+
+    This endpoint returns the document details, including the current
+    `processing_status` (e.g., "pending", "completed", "failed") and the
+    `audio_url` when available.
+    - To learn more about the API, check the [documentation page](https://your-documentation-link)
+    """
+    try:
+        # Query the database for the specified document
+        document = db.query(Document).filter(
+            Document.id == document_id,
+            Document.user_id == user.id
+        ).first()
+
+        # Raise an error if the document is not found
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        # Return the document details
+        return document
+
+    except Exception as e:
+        logger.error(f"Error retrieving document {document_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve document",
+        )
+
+
+
 # Update Document Endpoint
 @router.put("/{document_id}", response_model=DocumentResponse, status_code=status.HTTP_200_OK)
 async def update_document_endpoint(

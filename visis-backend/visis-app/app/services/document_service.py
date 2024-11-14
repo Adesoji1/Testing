@@ -199,13 +199,16 @@ async def process_document(document_id: int):
             audio_key,
             'audio/mpeg'
         )
+        # Log the generated audio URL
+        logger.info(f"Generated audio URL: {audio_url}")
 
         # Update document
         document.audio_url = audio_url
         document.audio_key = audio_key
         document.processing_status = 'completed'
         db.commit()
-
+        # Log document update
+        logger.info(f"Document {document_id} updated with audio URL: {audio_url}")
     except Exception as e:
         logger.error(f"Error processing document {document_id}: {str(e)}")
         if document:
