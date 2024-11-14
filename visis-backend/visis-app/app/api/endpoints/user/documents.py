@@ -26,7 +26,12 @@ from app.services.document_service import (
     process_document,
 )
 from app.utils.s3_utils import s3_handler
+from app.services.tts_service import TTSService
+from app.services.ocr_service import ocr_service
 from sqlalchemy import func
+
+# Initialize TTS Service
+tts_service = TTSService(region_name=settings.REGION_NAME)
 
 logger = logging.getLogger(__name__)
 
@@ -42,27 +47,103 @@ router = APIRouter(
     },
 )
 
-# Upload Document Endpoint
+# # Upload Document Endpoint first correct method
+# @router.post("/", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
+# async def upload_document(
+#     background_tasks: BackgroundTasks,
+#     file: UploadFile = File(...),
+#     is_public: bool = False,
+#     db: Session = Depends(get_db),
+#     user: User = Depends(get_current_user),
+# ):
+#     try:
+#         file_content = await file.read()
+
+#         if len(file_content) > settings.MAX_UPLOAD_SIZE:
+#             raise HTTPException(
+#                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+#                 detail=f"File size exceeds the maximum limit of {settings.MAX_UPLOAD_SIZE / (1024 * 1024)} MB",
+#             )
+
+#         file_key = f"{settings.S3_FOLDER_NAME}/{user.id}/{file.filename}"
+
+#         # Upload file to S3
+#         s3_url = await s3_handler.upload_file(
+#             file_obj=io.BytesIO(file_content),
+#             bucket=settings.S3_BUCKET_NAME,
+#             key=file_key,
+#             content_type=file.content_type,
+#         )
+
+#         if not s3_url:
+#             raise HTTPException(
+#                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#                 detail="Failed to upload file to storage",
+#             )
+
+#         # Create document record
+#         document_data = DocumentCreate(
+#             title=file.filename,
+#             author=user.username,
+#             file_type=file.content_type,
+#             file_key=file_key,
+#             url=s3_url,
+#             is_public=is_public,
+#         )
+
+#         document = create_document(
+#             db=db,
+#             document=document_data,
+#             user_id=user.id,
+#             file_key=file_key,
+#             file_size=len(file_content),
+#         )
+
+#         # Start background processing
+#         background_tasks.add_task(process_document, document.id)
+
+#         return document
+
+#     except HTTPException as e:
+#         raise e
+#     except Exception as e:
+#         logger.error(f"Error uploading document: {str(e)}")
+#         db.rollback()
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#             detail="Failed to upload document",
+#         )
+
+
+# ###Slow
 @router.post("/", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     is_public: bool = False,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    """
+    Upload a new document for processing.
+
+    This endpoint uploads a document, processes it for OCR and TTS, and returns
+    the document details including the `audio_url` upon completion.
+    """
     try:
+        # Read the uploaded file content
         file_content = await file.read()
 
+        # Check file size limit
         if len(file_content) > settings.MAX_UPLOAD_SIZE:
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 detail=f"File size exceeds the maximum limit of {settings.MAX_UPLOAD_SIZE / (1024 * 1024)} MB",
             )
 
+        # Generate the file key for S3
         file_key = f"{settings.S3_FOLDER_NAME}/{user.id}/{file.filename}"
 
-        # Upload file to S3
+        # Upload the file to S3
         s3_url = await s3_handler.upload_file(
             file_obj=io.BytesIO(file_content),
             bucket=settings.S3_BUCKET_NAME,
@@ -73,10 +154,10 @@ async def upload_document(
         if not s3_url:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to upload file to storage",
+                detail="Failed to upload file to S3",
             )
 
-        # Create document record
+        # Create a database record for the document
         document_data = DocumentCreate(
             title=file.filename,
             author=user.username,
@@ -85,7 +166,6 @@ async def upload_document(
             url=s3_url,
             is_public=is_public,
         )
-
         document = create_document(
             db=db,
             document=document_data,
@@ -94,13 +174,58 @@ async def upload_document(
             file_size=len(file_content),
         )
 
-        # Start background processing
-        background_tasks.add_task(process_document, document.id)
+        # Process the document (OCR and TTS)
+        try:
+            # Extract text using OCR
+            if document.file_type == "application/pdf":
+                text, _ = await ocr_service.extract_text_from_pdf(settings.S3_BUCKET_NAME, document.file_key)
+            elif document.file_type.startswith("image/"):
+                text, _ = await ocr_service.extract_text_from_image(settings.S3_BUCKET_NAME, document.file_key)
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Unsupported file type for processing.",
+                )
 
+            # Generate audio using TTS
+            max_length = 3000
+            text_chunks = [text[i:i + max_length] for i in range(0, len(text), max_length)]
+            audio_bytes_io = io.BytesIO()
+
+            for chunk in text_chunks:
+                chunk_audio = await tts_service.convert_text_to_speech(chunk)
+                audio_bytes_io.write(chunk_audio)
+
+            audio_bytes_io.seek(0)  # Reset the cursor to the beginning
+
+            # Upload the generated audio file to S3
+            audio_key = f"{settings.S3_FOLDER_NAME}/audio/{user.id}/{document.id}.mp3"
+            audio_url = await s3_handler.upload_file(
+                file_obj=audio_bytes_io,
+                bucket=settings.S3_BUCKET_NAME,
+                key=audio_key,
+                content_type="audio/mpeg",
+            )
+
+            # Update the document with the generated audio URL
+            document.audio_url = audio_url
+            document.audio_key = audio_key
+            document.processing_status = "completed"
+            db.commit()
+            db.refresh(document)
+
+        except Exception as processing_error:
+            document.processing_status = "failed"
+            document.processing_error = str(processing_error)
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Document processing failed: {str(processing_error)}",
+            )
+
+        # Return the document details, including the audio URL
         return document
 
-    except HTTPException as e:
-        raise e
     except Exception as e:
         logger.error(f"Error uploading document: {str(e)}")
         db.rollback()
