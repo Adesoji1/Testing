@@ -1,3 +1,4 @@
+markdown```
 File Structure
 visis-app/
 ├── .venv/                      # Virtual environment
@@ -72,7 +73,7 @@ visis-app/
 ├── .env                        # Environment variables
 ├── requirements.txt            # Python dependencies
 └── README.md                   # Project documentation
-
+markdown```
 
 ## Setup Instructions
 
