@@ -52,6 +52,11 @@ class Settings(BaseSettings):
     REGION_NAME: str = Field("us-east-1", description="Default AWS region for services.")
     S3_BUCKET_NAME: str = Field(..., description="The name of the S3 bucket for file storage.")
     S3_FOLDER_NAME: str = Field("uploads", description="The folder path inside the S3 bucket.")
+    OPENAI_API_KEY: str = Field("OpenAI API key", description="Input your correct OpenAI API key")
+
+    # REDIS_BROKER_URL: str = os.getenv("REDIS_BROKER_URL", "redis://localhost:6380/0")
+    # REDIS_BACKEND_URL: str = os.getenv("REDIS_BACKEND_URL", "redis://localhost:6380/1")
+
     
     # File Upload Configuration
     MAX_UPLOAD_SIZE: int = Field(10 * 1024 * 1024, description="Maximum file upload size in bytes (default: 10 MB).")

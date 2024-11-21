@@ -1,8 +1,19 @@
+# from sqlalchemy import Column, Integer, String
+# from app.database import Base
+
+# class Language(Base):
+#     __tablename__ = 'languages'
+#     id = Column(Integer, primary_key=True, index=True)
+#     name = Column(String)
+#     code = Column(String)
+
+# app/models/language.py
+
 from sqlalchemy import Column, Integer, String
 from app.database import Base
 
 class Language(Base):
     __tablename__ = 'languages'
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    code = Column(String)
+    name = Column(String, nullable=False)
+    code = Column(String, nullable=False,unique=True)

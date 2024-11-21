@@ -2,6 +2,7 @@
 from pydantic import BaseModel, HttpUrl
 from datetime import datetime
 from typing import Optional, List
+from app.schemas.audiobook import AudioBookResponse
 
 class DocumentBase(BaseModel):
     title: str
@@ -32,9 +33,14 @@ class DocumentResponse(DocumentBase):
     tags: Optional[List[str]] = []
     audio_url: Optional[str] = None
     detected_language: Optional[str] = None
+    genre: Optional[str] = None  # Include the genre field
+    audiobook: Optional[AudioBookResponse] = None
 
     class Config:
         orm_mode = True
+
+
+
 
 class DocumentFilter(BaseModel):
     search: Optional[str] = None
