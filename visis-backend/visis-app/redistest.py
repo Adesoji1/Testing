@@ -7,9 +7,15 @@
 # except Exception as e:
 #     print(f"Redis connection failed: {e}")
 
+from fastapi import APIRouter
 import logging
+import redis
 
+# Set up logging
 logger = logging.getLogger(__name__)
+
+# Define the router
+router = APIRouter()
 
 @router.get("/health")
 async def health_check():
