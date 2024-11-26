@@ -70,19 +70,19 @@
 # app/schemas/user_preference.py
 from pydantic import BaseModel, Field, model_validator
 from typing import Optional
-from app.schemas.enums import HighlightColor, FontSize, ReadingMode, SupportedLanguages
+from app.schemas.enums import HighlightColor, FontSize, ReadingMode, SupportedLanguages, PlaybackSpeed, AudioFormat, ContentVisibility
 
 class UserPreferenceBase(BaseModel):
     text_to_speech_voice: Optional[str] = "default"
-    playback_speed: Optional[str] = "1x"
-    audio_format: Optional[str] = "MP3"
+    playback_speed: Optional[PlaybackSpeed] = PlaybackSpeed.x1_0
+    audio_format: Optional[AudioFormat] = AudioFormat.MP3
     font_size: Optional[FontSize] = FontSize.medium
     highlight_color: Optional[HighlightColor] = HighlightColor.yellow
     reading_mode: Optional[ReadingMode] = ReadingMode.light
     auto_save_bookmark: Optional[bool] = True
     notification_enabled: Optional[bool] = True
     default_folder: Optional[str] = "My_Documents"
-    content_visibility: Optional[str] = "private"
+    content_visibility: Optional[ContentVisibility] = ContentVisibility.private
     preferred_language: Optional[SupportedLanguages] = SupportedLanguages.English
 
     @model_validator(mode="after")
@@ -135,8 +135,8 @@ class UserPreferenceBase(BaseModel):
 
 class UserPreferenceCreate(UserPreferenceBase):
     text_to_speech_voice: str
-    playback_speed: str
-    audio_format: str
+    playback_speed: PlaybackSpeed
+    audio_format: AudioFormat
     preferred_language: SupportedLanguages
 
 class UserPreferenceUpdate(UserPreferenceBase):
@@ -147,4 +147,4 @@ class UserPreferenceResponse(UserPreferenceBase):
     user_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True

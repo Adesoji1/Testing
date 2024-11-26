@@ -1,229 +1,154 @@
-# # app/api/endpoints/user/languages.py
+# app/api/endpoints/user/languages.py
 
-
-# from fastapi import APIRouter, Depends, HTTPException, status
-# from sqlalchemy.orm import Session
-# from typing import List
-# from app.models.language import Language
-# from app.schemas.language import LanguageCreate, LanguageResponse, DetectLanguageResponse
-# from app.services.language_services import (
-#     get_all_languages,
-#     add_language,
-#     delete_language_by_id,
-#     detect_language_from_text,
-# )
-# from app.database import get_db
-# from app.services.tts_service import TTSService
-
-# router = APIRouter(
-#     prefix="/languages",
-#     tags=["Languages"],
-#     responses={404: {"description": "Not found"}},
-# )
-
-
-
-# @router.get("/", response_model=List[LanguageResponse])
-# def list_languages(
-#     db: Session = Depends(get_db),
-#     tts_service: TTSService = Depends()
-# ):
-#     """
-#     Retrieve all languages with their supported voices.
-#     """
-#     # Query all languages from the database
-#     languages = db.query(Language).all()
-
-#     # Fetch the voice mappings from TTSService
-#     voice_map = tts_service.get_all_language_voices()
-
-#     # Populate the voices field dynamically for each language
-#     result = []
-#     for language in languages:
-#         result.append({
-#             "id": language.id,
-#             "name": language.name,
-#             "code": language.code,
-#             "voices": voice_map.get(language.code, [])
-#         })
-
-#     return result
-
-#     # # Build the response with voices
-#     # response = [
-#     #     LanguageResponse(
-#     #         id=language.id,
-#     #         name=language.name,
-#     #         code=language.code,
-#     #         voices=voice_map.get(language.code, [])  # Get voices for the language code
-#     #     )
-#     #     for language in languages
-#     # ]
-#     # return response
-
-
-# @router.post("/", response_model=LanguageResponse, status_code=status.HTTP_201_CREATED)
-# def create_language(
-#     language: LanguageCreate,
-#     db: Session = Depends(get_db)
-# ):
-#     """Add a new language to the database."""
-#     try:
-#         return add_language(db, language)
-#     except ValueError as e:
-#         raise HTTPException(status_code=400, detail=str(e))
-
-
-# @router.delete("/{language_id}", status_code=status.HTTP_204_NO_CONTENT)
-# def delete_language(
-#     language_id: int,
-#     db: Session = Depends(get_db)
-# ):
-#     """Delete a language by its ID."""
-#     try:
-#         return delete_language_by_id(db, language_id)
-#     except ValueError as e:
-#         raise HTTPException(status_code=404, detail=str(e))
-
-
-
-
-
-# @router.post("/detect", response_model=DetectLanguageResponse)
-# def detect_language(
-#     text: str,
-#     tts_service: TTSService = Depends()
-# ):
-#     """Detect language from text and return voice options."""
-#     return detect_language_from_text(text, tts_service)
-
-
-# # Define the PUT endpoint
-# @router.put("/{language_id}", response_model=LanguageResponse, status_code=status.HTTP_200_OK)
-# def update_language(
-#     language_id: int,
-#     language_update: LanguageCreate,
-#     db: Session = Depends(get_db),
-# ):
-#     """
-#     Update an existing language.
-#     """
-#     # Retrieve the language by its ID
-#     language = db.query(Language).filter(Language.id == language_id).first()
-#     if not language:
-#         raise HTTPException(status_code=404, detail="Language not found")
-    
-#     # Update the language attributes
-#     language.name = language_update.name
-#     language.code = language_update.code
-    
-#     # Commit the changes
-#     db.commit()
-#     db.refresh(language)
-    
-#     return language
-
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Dict, Optional
+from cachetools import TTLCache
+from datetime import datetime
+
 from app.models.language import Language
-from app.schemas.language import LanguageCreate, LanguageResponse, DetectLanguageResponse
-from app.services.language_services import (
-    get_all_languages,
-    add_language,
-    delete_language_by_id,
-    detect_language_from_text,
+from app.schemas.language import (
+    LanguageCreate,
+    LanguageResponse,
+    DetectLanguageResponse,
+    LanguageStats,
+    VoiceDetails
 )
 from app.database import get_db
+from app.services.language_services import LanguageService
 from app.services.tts_service import TTSService
 
-router = APIRouter(
-    prefix="/languages",
-    tags=["Languages"],
-    responses={404: {"description": "Not found"}},
-)
+router = APIRouter(prefix="/languages", tags=["Languages"])
+
+# Initialize services
+language_service = LanguageService()
 
 @router.get("/", response_model=List[LanguageResponse])
-def list_languages(
-    db: Session = Depends(get_db),
-    tts_service: TTSService = Depends()
+async def list_languages(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=50),
+    search: Optional[str] = None,
+    sort_by: str = "name",
+    db: Session = Depends(get_db)
 ):
-    """
-    Retrieve all languages with their supported voices dynamically.
-    """
-    # Query all languages from the database
-    languages = db.query(Language).all()
-
-    # Fetch the voice mappings from TTSService
-    voice_map = tts_service.get_all_language_voices()
-
-    # Build the response with voices
-    response = [
-        LanguageResponse(
-            id=language.id,
-            name=language.name,
-            code=language.code,
-            voices=voice_map.get(language.code, [])  # Get voices for the language code
+    """List all supported languages with their voices."""
+    try:
+        languages = await language_service.get_languages(
+            db=db,
+            skip=skip,
+            limit=limit,
+            search=search,
+            sort_by=sort_by
         )
-        for language in languages
-    ]
-    return response
 
+        response = []
+        for lang in languages:
+            voices = await language_service.get_voices_for_language(lang.code)
+            response.append(
+                LanguageResponse(
+                    id=lang.id,
+                    name=lang.name,
+                    code=lang.code,
+                    display_name=lang.display_name if hasattr(lang, 'display_name') else None,
+                    is_active=lang.is_active if hasattr(lang, 'is_active') else True,
+                    native_name=lang.native_name if hasattr(lang, 'native_name') else None,
+                    voices=voices,
+                    created_at=lang.created_at if hasattr(lang, 'created_at') else datetime.utcnow(),
+                    updated_at=lang.updated_at if hasattr(lang, 'updated_at') else None,
+                    usage_count=lang.usage_count if hasattr(lang, 'usage_count') else 0
+                )
+            )
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/", response_model=LanguageResponse, status_code=status.HTTP_201_CREATED)
-def create_language(
+@router.get("/stats", response_model=LanguageStats)
+async def get_language_statistics(db: Session = Depends(get_db)):
+    """Get statistics about language usage."""
+    return await language_service.get_language_stats(db)
+
+@router.get("/{language_code}/voices", response_model=List[VoiceDetails])
+async def get_language_voices(language_code: str):
+    """Get available voices for a specific language."""
+    voices = await language_service.get_voices_for_language(language_code)
+    if not voices:
+        # Return empty list instead of 404 error
+        return []
+    return voices
+
+@router.post("/detect", response_model=DetectLanguageResponse)
+async def detect_language(text: str):
+    """Detect language from text and suggest voices."""
+    try:
+        return await language_service.detect_language(text)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/", response_model=LanguageResponse)
+async def create_language(
     language: LanguageCreate,
     db: Session = Depends(get_db)
 ):
-    """Add a new language to the database."""
+    """Create a new language."""
     try:
-        return add_language(db, language)
-    except ValueError as e:
+        return await language_service.create_language(db, language)
+    except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@router.put("/{language_id}", response_model=LanguageResponse)
+async def update_language(
+    language_id: int,
+    language: LanguageCreate,
+    db: Session = Depends(get_db)
+):
+    """Update an existing language."""
+    try:
+        return await language_service.update_language(db, language_id, language)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-@router.delete("/{language_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_language(
+@router.delete("/{language_id}")
+async def delete_language(
     language_id: int,
     db: Session = Depends(get_db)
 ):
-    """Delete a language by its ID."""
+    """Delete a language."""
     try:
-        return delete_language_by_id(db, language_id)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        await language_service.delete_language(db, language_id)
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-
-@router.post("/detect", response_model=DetectLanguageResponse)
-def detect_language(
-    text: str,
-    tts_service: TTSService = Depends()
+@router.get("/popular", response_model=List[LanguageResponse])
+async def get_popular_languages(
+    limit: int = Query(5, ge=1, le=20),
+    db: Session = Depends(get_db)
 ):
-    """Detect language from text and return voice options."""
-    return detect_language_from_text(text, tts_service)
-
-
-@router.put("/{language_id}", response_model=LanguageResponse, status_code=status.HTTP_200_OK)
-def update_language(
-    language_id: int,
-    language_update: LanguageCreate,
-    db: Session = Depends(get_db),
-):
-    """
-    Update an existing language.
-    """
-    # Retrieve the language by its ID
-    language = db.query(Language).filter(Language.id == language_id).first()
-    if not language:
-        raise HTTPException(status_code=404, detail="Language not found")
-    
-    # Update the language attributes
-    language.name = language_update.name
-    language.code = language_update.code
-    
-    # Commit the changes
-    db.commit()
-    db.refresh(language)
-    
-    return language
+    """Get most popular languages based on usage."""
+    try:
+        languages = await language_service.get_popular_languages(db, limit)
+        if not languages:
+            return []
+            
+        response = []
+        for lang in languages:
+            voices = await language_service.get_voices_for_language(lang.code)
+            response.append(
+                LanguageResponse(
+                    id=lang.id,
+                    name=lang.name,
+                    code=lang.code,
+                    display_name=lang.display_name,
+                    is_active=lang.is_active,
+                    native_name=lang.native_name,
+                    voices=voices,
+                    created_at=lang.created_at,
+                    updated_at=lang.updated_at,
+                    usage_count=lang.usage_count or 0
+                )
+            )
+        return response
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

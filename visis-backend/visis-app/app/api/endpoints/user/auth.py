@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Body, Depends, HTTPException, status, BackgroundTasks
+from enum import Enum
+from fastapi import APIRouter, Form, Body, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import ExpiredSignatureError, JWTError, jwt
@@ -91,7 +92,14 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     user.last_login_date = datetime.now(tz=timezone.utc)
     db.commit()
 
-    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "user_type": user.user_type,
+        "token_type": "bearer",
+        "firstname": user.firstname,
+        "lastname": user.lastname
+    }
 
     
 
@@ -153,32 +161,62 @@ async def refresh_access_token(
     return {
         "access_token": new_access_token,
         "refresh_token": new_refresh_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "user_type": user.user_type,
+        "firstname": user.firstname,
+        "lastname":  user.lastname
     }
 
-# Route to register a new user
+
+# Define UserType enum
+class UserType(str, Enum):
+    SIGHTED = "Sighted"
+    VISUALLY_IMPAIRED = "Visually_Impaired"
+
+def validate_password(password: str) -> bool:
+    return len(password) >= 8
+
 @router.post("/register", response_model=UserResponse)
-async def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.username == user.username).first()
+async def register_user(
+    username: str = Form(...),
+    firstname: str = Form(...),
+    lastname: str = Form(...),
+    email: str = Form(...),
+    user_type: UserType = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    # Check existing username
+    db_user = db.query(User).filter(User.username == username).first()
     if db_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered",
         )
-    db_email = db.query(User).filter(User.email == user.email).first()
+    
+    # Check existing email
+    db_email = db.query(User).filter(User.email == email).first()
     if db_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
-        
+    
+    # Validate password
+    if not validate_password(password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters long",
+        )
+    
+    # Create new user
     new_user = User(
-        username=user.username,
-        firstname=user.firstname,
-        lastname=user.lastname,
-        email=user.email,
-        user_type=user.user_type,
-        password_hash=hashed_password(user.password),
+        username=username,
+        firstname=firstname,
+        lastname=lastname,
+        email=email,
+        user_type=user_type,
+        password_hash=hashed_password(password),
         registration_date=datetime.now(tz=timezone.utc),
         last_login_date=datetime.now(tz=timezone.utc),
     )

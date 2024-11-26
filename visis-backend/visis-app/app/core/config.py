@@ -25,55 +25,60 @@
 #         env_file = ".env"
 
 # settings = Settings()
+# app/core/config.py
+
+# app/core/config.py
 
 from pydantic_settings import BaseSettings
 from pydantic import Field
 import dotenv
 import os
+from typing import Optional
 
-# Load environment variables from .env file
 dotenv.load_dotenv()
 
 class Settings(BaseSettings):
-    """
-    Application settings loaded from environment variables or .env file.
-    """
-    # Critical Settings
-    SECRET_KEY: str = Field(..., description="The secret key used for signing tokens.")
-    ALGORITHM: str = Field(..., description="The hashing algorithm for token encryption.")
-    SQLALCHEMY_DATABASE_URL: str = Field(..., description="Database connection string.")
+    # Authentication & Security
+    SECRET_KEY: str = Field(..., description="Secret key for token signing")
+    ALGORITHM: str = Field(default="HS256", description="Hashing algorithm for token encryption")
     
-    # Email Configuration
-    MAILTRAP_API_KEY: str = Field(None, description="API key for Mailtrap service.")
+    # Database
+    SQLALCHEMY_DATABASE_URL: str = Field(..., description="Database connection string")
+    
+    # Email
+    MAILTRAP_API_KEY: Optional[str] = Field(None, description="Mailtrap API key")
     
     # AWS Configuration
-    AWS_ACCESS_KEY_ID: str = Field(..., description="AWS Access Key ID for S3 and other services.")
-    AWS_SECRET_ACCESS_KEY: str = Field(..., description="AWS Secret Access Key for S3 and other services.")
-    REGION_NAME: str = Field("us-east-1", description="Default AWS region for services.")
-    S3_BUCKET_NAME: str = Field(..., description="The name of the S3 bucket for file storage.")
-    S3_FOLDER_NAME: str = Field("uploads", description="The folder path inside the S3 bucket.")
-    OPENAI_API_KEY: str = Field("OpenAI API key", description="Input your correct OpenAI API key")
-
-    # REDIS_BROKER_URL: str = os.getenv("REDIS_BROKER_URL", "redis://localhost:6380/0")
-    # REDIS_BACKEND_URL: str = os.getenv("REDIS_BACKEND_URL", "redis://localhost:6380/1")
-
+    AWS_ACCESS_KEY_ID: str = Field(..., description="AWS Access Key ID")
+    AWS_SECRET_ACCESS_KEY: str = Field(..., description="AWS Secret Access Key")
+    REGION_NAME: str = Field(default="us-east-1", description="AWS region name")  # Keep REGION_NAME for backwards compatibility
+    S3_BUCKET_NAME: str = Field(..., description="S3 bucket name")
+    S3_FOLDER_NAME: str = Field(default="uploads", description="S3 folder path")
     
-    # File Upload Configuration
-    MAX_UPLOAD_SIZE: int = Field(10 * 1024 * 1024, description="Maximum file upload size in bytes (default: 10 MB).")
+    # AI Services
+    GEMINI_API_KEY: str = Field(..., description="Google Gemini API key")
+    OPENAI_API_KEY: Optional[str] = Field(None, description="OpenAI API key")
     
-    # Token Expiry Configuration
-    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = Field(
-        15, description="Time in minutes before a password reset token expires."
+    # File Upload
+    MAX_UPLOAD_SIZE: int = Field(
+        default=10 * 1024 * 1024,  # 10MB
+        description="Maximum upload size in bytes"
     )
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
-        30, description="Time in minutes before an access token expires."
-    )
-    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(
-        7, description="Time in days before a refresh token expires."
-    )
+    
+    # Token Configuration
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = Field(default=15, description="Password reset token expiry")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, description="Access token expiry")
+    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7, description="Refresh token expiry")
+
+    # Property for AWS_REGION compatibility
+    @property
+    def AWS_REGION(self) -> str:
+        return self.REGION_NAME
 
     class Config:
         env_file = ".env"
+        case_sensitive = True
+        extra = "ignore"
 
 # Initialize settings
 settings = Settings()

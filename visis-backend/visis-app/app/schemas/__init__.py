@@ -11,3 +11,4 @@ from .audiobook_language import AudioBookLanguageBase, AudioBookLanguageCreate, 
 from .user_activity import UserActivityBase, UserActivityCreate, UserActivityResponse
 from .feedback import FeedbackBase, FeedbackCreate, FeedbackResponse
 from .app_setting import AppSettingBase, AppSettingCreate, AppSettingResponse
+from .enums import PlaybackSpeed, AudioFormat, FontSize, HighlightColor, ReadingMode, ContentVisibility, SupportedLanguages

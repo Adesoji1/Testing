@@ -37,7 +37,7 @@ class DocumentResponse(DocumentBase):
     audiobook: Optional[AudioBookResponse] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 
@@ -57,4 +57,4 @@ class DocumentStats(BaseModel):
     total_storage_used: float  # In MB
 
     class Config:
-        orm_mode = True
+        from_attributes = True
