@@ -37,6 +37,7 @@
 #     def __repr__(self):
 #         return f"<Document(id={self.id}, title={self.title}, status={self.processing_status})>"
 
+#app/models/document.py
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB

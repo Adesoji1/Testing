@@ -12,6 +12,9 @@ from .audiobook_language import AudioBookLanguage
 from .user_activity import UserActivity
 from .feedback import Feedback
 from .app_setting import AppSetting
+from .donation import Donation
+from .transaction import Transaction
+from .subscription import Subscription
 
 
 # Export all models and Base for use in migrations and elsewhere
@@ -30,5 +33,8 @@ __all__ = [
     "UserActivity",
     "Feedback",
     "AppSetting",
+     "Donation",
+    "Transaction",
+    "Subscription",
 ]
 # print("Initializing models: importing AudioBook")

@@ -14,6 +14,7 @@ class UserBookmark(Base):
     position = Column(String, nullable=False)
     timestamp = Column(String, nullable=True)  # Optional, for storing audiobook timestamps
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    title = Column(String)
 
     # Relationships
     user = relationship("User", back_populates="bookmarks",lazy="joined")

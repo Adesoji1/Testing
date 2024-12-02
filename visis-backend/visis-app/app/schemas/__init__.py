@@ -1,3 +1,4 @@
+#app/schemas/__init__.py
 from .user import UserBase, UserCreate, UserResponse
 from .document import DocumentBase, DocumentCreate, DocumentResponse
 from .audiobook import AudioBookBase, AudioBookCreate, AudioBookResponse

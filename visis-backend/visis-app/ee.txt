@@ -1,0 +1,2258 @@
+Certainly! The issue you're experiencing with the genre being set to `"Unknown"` is primarily due to the genre detection logic relying on English keywords, while your documents may be in other languages like Dutch. Since the extracted text is in a different language, the keywords in English are not found, resulting in the genre remaining `"Unknown"`.
+
+To improve the accuracy of genre detection, especially when dealing with multiple languages, you have a few options:
+
+1. **Translate the Text to English Before Genre Detection**:
+   
+   - **Use Amazon Translate** to translate the extracted text into English.
+   - Perform genre detection on the translated text using your existing English keywords.
+
+2. **Expand Genre Keywords to Include Other Languages**:
+
+   - Add keywords in multiple languages for each genre.
+   - This approach can be labor-intensive and may not cover all possible languages.
+
+3. **Leverage AWS Comprehend for Topic Modeling**:
+
+   - Use AWS Comprehend's topic modeling or entity recognition to infer the genre.
+   - AWS Comprehend supports multiple languages for certain features.
+
+4. **Use Machine Learning Models for Text Classification**:
+
+   - Implement a machine learning model trained on multi-language datasets to classify text into genres.
+   - This requires additional effort to train and deploy the model.
+
+Given that you're already using AWS services, **Option 1 (Using Amazon Translate)** is the most straightforward and effective solution. It allows you to continue using your existing genre detection logic with minimal changes.
+
+---
+
+## **Implementing the Solution**
+
+### **1. Integrate Amazon Translate**
+
+First, you need to integrate Amazon Translate into your document processing pipeline.
+
+**Import the Boto3 Client for Translate:**
+
+```python
+import boto3
+```
+
+**Initialize the Translate Client:**
+
+```python
+translate_client = boto3.client('translate', region_name=settings.REGION_NAME)
+```
+
+### **2. Modify Your `upload_document` Function**
+
+Update your `upload_document` function to include the translation step before genre detection.
+
+**Updated Code Snippet:**
+
+```python
+# After mapping the detected language to full name
+full_language_name = map_language_code_to_supported(detected_language)
+document.detected_language = full_language_name
+
+# Generate description (in original language)
+document.description = text[:200].strip()
+
+# Translate text to English if necessary
+if detected_language != 'en':
+    # Use Amazon Translate to translate the text to English
+    try:
+        translation = translate_client.translate_text(
+            Text=text,
+            SourceLanguageCode=detected_language,
+            TargetLanguageCode='en'
+        )
+        translated_text = translation.get('TranslatedText', '')
+        logger.info(f"Translation successful for document {document.id}")
+    except Exception as e:
+        logger.error(f"Error translating text for document {document.id}: {str(e)}")
+        translated_text = text  # Fallback to original text if translation fails
+else:
+    translated_text = text
+
+# Infer genre from translated text
+genre = "Unknown"
+for key, keywords in genre_keywords.items():
+    if any(keyword in translated_text.lower() for keyword in keywords):
+        genre = key
+        break
+document.genre = genre
+```
+
+### **3. Update Imports and Initialization**
+
+Make sure to import the necessary libraries and initialize the Translate client at the beginning of your file.
+
+```python
+# Import statements
+import boto3
+# ... other imports ...
+
+# Initialize AWS clients
+translate_client = boto3.client('translate', region_name=settings.REGION_NAME)
+```
+
+### **4. Handle Exceptions and Logging**
+
+Ensure that you have proper exception handling and logging to catch any errors during translation.
+
+```python
+try:
+    # Translation code...
+except Exception as e:
+    logger.error(f"Error translating text for document {document.id}: {str(e)}")
+    translated_text = text  # Fallback to original text
+```
+
+---
+
+## **Full Updated `upload_document` Function**
+
+Here's the updated `upload_document` function with the translation step included:
+
+```python
+@router.post("/", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
+def upload_document(
+    file: UploadFile = File(...),
+    is_public: bool = False,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    try:
+        start_time = time.time()
+
+        # Read the uploaded file content
+        file_content = file.file.read()
+
+        # Allowed content types
+        ALLOWED_CONTENT_TYPES = ["application/pdf", "image/png", "image/jpeg", "text/plain"]
+
+        # Check file type
+        if file.content_type not in ALLOWED_CONTENT_TYPES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unsupported file type for processing.",
+            )
+
+        # Generate the file key for S3
+        file_key = f"{settings.S3_FOLDER_NAME}/{user.id}/{file.filename}"
+
+        # Upload the file to S3
+        s3_url = s3_handler.upload_file(
+            file_obj=io.BytesIO(file_content),
+            bucket=settings.S3_BUCKET_NAME,
+            key=file_key,
+            content_type=file.content_type,
+        )
+        if not s3_url:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to upload file to S3",
+            )
+
+        # Create a database record for the document
+        document_data = DocumentCreate(
+            title=file.filename,
+            author=user.username,
+            file_type=file.content_type,
+            file_key=file_key,
+            url=s3_url,
+            is_public=is_public,
+        )
+        document = create_document(
+            db=db,
+            document_data=document_data,
+            user_id=user.id,
+            file_key=file_key,
+            file_size=len(file_content),
+        )
+
+        # Update processing status to "processing"
+        document.processing_status = "processing"
+        db.commit()
+
+        # Start processing the document
+        try:
+            with ThreadPoolExecutor(max_workers=13) as executor:
+                # Determine file type and process accordingly
+                if document.file_type == "application/pdf":
+                    text, detected_language = ocr_service.extract_text_from_pdf(
+                        bucket_name=settings.S3_BUCKET_NAME, file_key=document.file_key
+                    )
+                elif document.file_type.startswith("image/"):
+                    text, detected_language = ocr_service.extract_text_from_image(
+                        bucket_name=settings.S3_BUCKET_NAME, file_key=document.file_key
+                    )
+                    # Rekognition for tags
+                    tags = rekognition_service.detect_labels(
+                        bucket_name=settings.S3_BUCKET_NAME, file_key=document.file_key
+                    )
+                    if isinstance(tags, str):
+                        tags = tags.split(", ")
+                    if not tags:
+                        tags = ["No tags detected"]
+                    document.tags = tags
+                elif document.file_type == "text/plain":
+                    text = file_content.decode("utf-8")
+                    detected_language = "en"
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Unsupported file type for processing.",
+                    )
+
+                if not text.strip():
+                    raise Exception("No text found in the document.")
+
+                # Map detected language to full name
+                full_language_name = map_language_code_to_supported(detected_language)
+                document.detected_language = full_language_name
+
+                # Generate description (in original language)
+                document.description = text[:200].strip()
+
+                # Translate text to English if necessary
+                if detected_language != 'en':
+                    try:
+                        translation = translate_client.translate_text(
+                            Text=text,
+                            SourceLanguageCode=detected_language,
+                            TargetLanguageCode='en'
+                        )
+                        translated_text = translation.get('TranslatedText', '')
+                        logger.info(f"Translation successful for document {document.id}")
+                    except Exception as e:
+                        logger.error(f"Error translating text for document {document.id}: {str(e)}")
+                        translated_text = text  # Fallback to original text
+                else:
+                    translated_text = text
+
+                # Infer genre from translated text
+                genre = "Unknown"
+                for key, keywords in genre_keywords.items():
+                    if any(keyword in translated_text.lower() for keyword in keywords):
+                        genre = key
+                        break
+                document.genre = genre
+
+                # Continue with the rest of your processing (TTS, audiobook creation, etc.)
+                # ...
+
+        except Exception as processing_error:
+            logger.error(f"Error processing document {document.id}: {str(processing_error)}")
+            document.processing_status = "failed"
+            document.processing_error = str(processing_error)
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Document processing failed: {str(processing_error)}",
+            )
+
+    except HTTPException as http_exc:
+        logger.error(f"HTTP error uploading document: {str(http_exc.detail)}")
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Error uploading document: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload document",
+        )
+```
+
+---
+
+## **Explanation**
+
+- **Translation Step**:
+  
+  - We check if the detected language is not English (`'en'`).
+  - If not, we use Amazon Translate to translate the text into English.
+  - We handle any exceptions during translation and fallback to the original text if necessary.
+
+- **Genre Detection**:
+
+  - We perform genre detection on the translated text.
+  - Since the text is now in English, your existing keyword-based genre detection will be more effective.
+
+- **Preserving Original Description**:
+
+  - The `description` field still uses the original text (first 200 characters).
+  - This ensures that the description matches the language of the original document.
+
+---
+
+## **Benefits of This Approach**
+
+- **Improved Genre Detection**:
+
+  - By translating the text to English, you increase the chances of matching the keywords.
+  - This reduces the occurrences of the genre being `"Unknown"`.
+
+- **Multilingual Support**:
+
+  - Your application becomes more robust in handling documents in various languages.
+  - Users uploading documents in languages other than English will have a better experience.
+
+- **Minimal Changes**:
+
+  - The changes required are minimal and integrate seamlessly with your existing codebase.
+  - You continue to leverage AWS services, keeping your technology stack consistent.
+
+---
+
+## **Considerations**
+
+### **Cost**
+
+- **AWS Translate Costs**:
+
+  - Using Amazon Translate will incur additional costs based on the amount of text translated.
+  - Monitor your AWS usage and ensure it aligns with your budget.
+
+### **Performance**
+
+- **Processing Time**:
+
+  - Translation may add additional time to the document processing pipeline.
+  - In most cases, the added time is negligible, but you should test to ensure acceptable performance.
+
+### **Error Handling**
+
+- **Translation Failures**:
+
+  - Ensure you have proper exception handling in case the translation service fails.
+  - Fallback to the original text and handle genre detection accordingly.
+
+### **Privacy and Compliance**
+
+- **Data Handling**:
+
+  - Be mindful of the data you're sending to AWS Translate, especially if it contains sensitive information.
+  - Ensure compliance with any data protection regulations applicable to your application.
+
+---
+
+## **Alternative Approaches**
+
+### **1. Expand Genre Keywords to Include Multiple Languages**
+
+- **Pros**:
+
+  - Directly matches keywords in the original language.
+  - No additional costs from translation services.
+
+- **Cons**:
+
+  - Requires extensive effort to gather keywords for each genre in multiple languages.
+  - Not scalable as you add support for more languages.
+
+### **2. Use Machine Learning Models**
+
+- **Pros**:
+
+  - Can provide more accurate genre classification.
+  - Models can be trained on multilingual datasets.
+
+- **Cons**:
+
+  - Requires significant development effort to train and deploy models.
+  - May require additional resources and infrastructure.
+
+### **3. Use AWS Comprehend for Topic Modeling**
+
+- **Pros**:
+
+  - AWS Comprehend supports multiple languages for certain features.
+  - Can extract entities, key phrases, and topics.
+
+- **Cons**:
+
+  - Topic modeling in AWS Comprehend supports limited languages.
+  - May require adjustments to your processing pipeline.
+
+---
+
+## **Conclusion**
+
+By integrating Amazon Translate into your document processing pipeline, you enhance the genre detection mechanism, allowing it to work effectively with documents in various languages. This approach provides a balance between improving functionality and maintaining simplicity in your codebase.
+
+---
+
+**Feel free to implement this solution and let me know if you encounter any issues or have further questions!**
+
+
+
+
+
+####paystack
+
+
+Payment Channels
+In a nutshell
+
+Paystack enables you accept payments from customers using different payment channels such as: cards, mobile money accounts, QR codes, directly from their bank account or USSD.
+
+If you use the the Popup or Redirect method, the paying customer will be shown all the payment methods selected on your dashboard. But if you don't want to use either option, you can initiate all the different payment channels directly from your server using the Charge API.
+What channels are available?
+
+Card payment channels are available on all Paystack accounts, while the other payment channels are only available in countries where they are supported.
+Cards
+Feature Availability
+
+The Card API is available in all our markets for businesses that are PCI Compliant. If you intend to use this API, you should check the compliance requirements outlined below and reach out to us.
+
+The Cards API allows you to send card details securely and compliantly to our server from your custom checkout. With this, PCI-DSS complaint businesses can build bespoke checkout experiences without compromising on security.
+
+The sensitivity of card details requires businesses to adhere to the Payment Card Industry Data Security Standards (PCI-DSS), to ensure that they are securely processed. Paystack adheres to this as a PCI Level 1 Service Provider, allowing non-complaint businesses to use our Checkout and Mobile SDKs for card payments
+Compliance Requirements
+
+PCI-DSS certification documents can only be issued on behalf of the PCI Council by an accredited Qualified Security Assessor (QSA) after an audit.
+
+The documents issued by the council are the Attestation of Compliance (AOC) and Report on Compliance. These documents are only valid for one year from the dated they were signed. We require you to submit these documents before you’re allowed to use this API.
+
+For Paystack, a valid AOC needs to show the following:
+
+    Issued after an audit by a QSA
+    Signed off by a QSA
+    Within one year of issue date
+    Has the PCI SSC logo on the cover page
+    Adheres to at least version 3.2.1 of PCI-DSS 
+
+If you have met the criteria above please submit your documents to support@paystack.com or through your Paystack relationship manager and we'll grant access to the APIs.
+Bank accounts
+Feature availability
+
+This feature is currently available to businesses in Nigeria.
+
+The Pay with Bank feature allows customers pay through internet banking portal or by providing their bank account number and authenticating using an OTP sent to their phone or email.
+
+This is different from Bank Transfers where customers transfer money into a bank account.
+Collect bank details
+
+To collect bank details, you would need to prompt the user to select their bank and enter their account number. To fetch the list of supported banks, make a GET request to the list banksAPI endpoint, with the additional filter pay_with_bank=true.
+
+The banks can be listed in a dropdown or any other format that allows the user to easily pick their bank of choice.
+Create a charge
+
+Send email, amount, metadata, bank (an object that includes the code of the bank and account_number supplied by customer) and birthday to our Charge endpoint to start.
+Show Response
+
+curl https://api.paystack.co/charge
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-H "Content-Type: application/json"
+
+-d '{ "email": "customer@email.com", 
+
+      "amount": "10000", 
+
+      "bank": {
+
+        "code": "057", 
+
+        "account_number": "0000000000" 
+
+      }
+
+    }'
+
+-X POST
+
+If the selected bank is Kuda, you need to make use of phone and token instead of account_number in the bank object:
+Show Response
+
+curl https://api.paystack.co/charge
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-H "Content-Type: application/json"
+
+-d '{ "email": "customer@email.com", 
+
+      "amount": "10000", 
+
+      "bank": {
+
+        "code": "50211", 
+
+        "phone": "+2348100000000",
+
+        "token": "123456"
+
+      }
+
+    }'
+
+-X POST
+
+
+When the API call is made, the value of the data.status key is pending as the payment is being processed in the background. The data.status then updates to either, success or failed depending on whether the transaction was successful or not.
+Pay with Transfer
+Feature availability
+
+This feature is currently available to businesses in Nigeria and merchants need to reach out to support@paystack.com to enable it on their integration.
+
+Pay with Transfer (PwT) is a feature that allow merchants or businesses create temporary bank accounts that customers can use to pay for goods or services. The account number is generated and tied to the current customer’s transaction. The account number becomes invalid after the customer’s transaction or when it exceeds it’s expiry time.
+Create a PwT charge
+
+At the point of payment, you initiate a request to the Create ChargeAPI endpoint, passing the email, amount and bank_transfer object. The bank_transfer object takes the account_expires_at which is used to set the expiry of an account number for a transaction:
+Show Response
+
+#!/bin/sh
+
+
+url="https://api.paystack.co/charge"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+content_type="Content-Type: application/json"
+
+data='{ 
+
+  "email": "another@one.com", 
+
+  "amount": "25000", 
+
+  "bank_transfer": {
+
+    "account_expires_at": "2023-09-12T13:10:00Z"
+
+  } 
+
+}'
+
+
+curl "$url" -H "$authorization" -H "$content_type" -d "$data" -X POST
+
+Bank Transfer Param	Type	Description
+account_expires_at	String	Account validity period in ISO 8601 format (YYYY-MM-DDThh:mm:ssZ). Minimum time is 15 mins from the current time and maximum time is 8 hours from the current time. You can also set this to null so we automatically set it to 8 hours from the current time.
+Account expiry
+
+If the difference between account_expires_at and the current time is less than 15 mins we will default to a 15 mins. If the difference between account_expires_at and the current time exceeds 8 hours we will default to 8 hours.
+Verifying transfer
+Receiving notifications
+
+To receive notifications, you need to implement a webhook URL and set the webhook URL on your Paystack Dashboard
+
+A bank transfer is initiated by a customer and processed by their bank. In order to confirm payment, you need to implement webhooks and listen to the following events:
+Event	Description
+charge.success	This is sent when the customer’s transfer is successful.
+bank.transfer.rejected	This is sent when the customer either sent an incorrect amount or when the customer has been flagged by our fraud system.
+
+    Charge SuccessfulTransfer Rejected
+
+{
+
+  "event": "charge.success",
+
+  "data": {
+
+    "id": 3104021987,
+
+    "domain": "test",
+
+    "status": "success",
+
+    "reference": "zuz8ggd1ro",
+
+    "amount": 25000,
+
+    "message": null,
+
+    "gateway_response": "Approved",
+
+    "paid_at": "2023-09-12T13:29:09.000Z",
+
+    "created_at": "2023-09-12T13:27:50.000Z",
+
+    "channel": "bank_transfer",
+
+    "currency": "NGN",
+
+    "ip_address": "172.91.42.100",
+
+    "metadata": "",
+
+    "fees_breakdown": null,
+
+    "log": null,
+
+    "fees": 375,
+
+    "fees_split": null,
+
+    "authorization": {
+
+      "authorization_code": "AUTH_q5nfynycgm",
+
+      "bin": "008XXX",
+
+      "last4": "X553",
+
+      "exp_month": "09",
+
+      "exp_year": "2023",
+
+      "channel": "bank_transfer",
+
+      "card_type": "transfer",
+
+      "bank": null,
+
+      "country_code": "NG",
+
+      "brand": "Managed Account",
+
+      "reusable": false,
+
+      "signature": null,
+
+      "account_name": null,
+
+      "sender_country": "NG",
+
+      "sender_bank": null,
+
+      "sender_bank_account_number": "XXXXXXX553",
+
+      "sender_name": "Jadesola Oluwashina",
+
+      "narration": "Channel Tests"
+
+    },
+
+    "customer": {
+
+      "id": 138496675,
+
+      "first_name": null,
+
+      "last_name": null,
+
+      "email": "another@one.com",
+
+      "customer_code": "CUS_1eq06yu8efl8u63",
+
+      "phone": null,
+
+      "metadata": null,
+
+      "risk_action": "default",
+
+      "international_format_phone": null
+
+    },
+
+    "plan": {},
+
+    "subaccount": {},
+
+    "split": {},
+
+    "order_id": null,
+
+    "paidAt": "2023-09-12T13:29:09.000Z",
+
+    "requested_amount": 25000,
+
+    "pos_transaction_data": null,
+
+    "source": {
+
+      "type": "api",
+
+      "source": "merchant_api",
+
+      "entry_point": "charge",
+
+      "identifier": null
+
+    }
+
+  }
+
+}
+
+Alternatively, you can use the Check Pending ChargeAPI endpoint to manually verify the status of the transaction.
+USSD
+
+This Payment method is specifically for Nigerian customers. Nigerian Banks provide USSD services that customers use to perform transactions, and we've integrated with some of them to enable customers complete payments.
+
+The Pay via USSD channel allows your Nigerian customers to pay you by dialling a USSD code on their mobile device. This code is usually in the form of * followed by some code and ending with #. The user is prompted to authenticate the transaction with a PIN and then it is confirmed.
+
+All you need to initiate a USSD charge is the customer email and the amount to charge.
+
+When the user pays, a response will be sent to your webhook. Hence, for this to work properly as expected, webhooks must be set up on your Paystack Dashboard.
+Create a charge
+
+Send an email and amount to the chargeAPI endpoint. Specify the USSD type you are charging as well.
+
+Below are all the USSD types we support. We'll add to list as we have more:
+Bank	Type
+Guaranty Trust Bank	737
+United Bank of Africa	919
+Sterling Bank	822
+Zenith Bank	966
+Show Response
+
+curl https://api.paystack.co/charge
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-H "Content-Type: application/json"
+
+-d '{ "email": "some@body.nice", 
+
+      "amount":"10000",
+
+      "ussd": {
+
+        "type": "737"
+
+      },
+
+      "metadata": {
+
+        "custom_fields":[{
+
+          "value": "makurdi",
+
+          "display_name": "Donation for",
+
+          "variable_name": "donation_for"
+
+        }]
+
+      }
+
+    }'
+
+-X POST
+
+When a charge is made, the default response provides a USSD code for the customer to dial to complete the payment.
+Handle response
+
+When the user completes payment, a response is sent to the merchant’s webhook. Hence, for this to work properly as expected, webhooks must be set up for the merchant..
+
+The charge.success event is raised on successful payment. The sample response to be sent to the user’s webhook would look like:
+
+    JSON
+
+{
+
+  "event": "charge.success",
+
+  "data": {
+
+    "id": 53561,
+
+    "domain": "live",
+
+    "status": "success",
+
+    "reference": "2ofkbk0yie6dvzb",
+
+    "amount": 150000,
+
+    "message": "madePayment",
+
+    "gateway_response": "Payment successful",
+
+    "paid_at": "2018-06-25T12:42:58.000Z",
+
+    "created_at": "2018-06-25T12:38:59.000Z",
+
+    "channel": "ussd",
+
+    "currency": "NGN",
+
+    "ip_address": "54.246.237.22, 162.158.38.185, 172.31.15.210",
+
+    "metadata": "",
+
+    "log": null,
+
+    "fees": null,
+
+    "fees_split": null,
+
+    "authorization": {
+
+      "authorization_code": "AUTH_4c6mhnmmeusp4yd",
+
+      "bin": "XXXXXX",
+
+      "last4": "XXXX",
+
+      "exp_month": "05",
+
+      "exp_year": "2018",
+
+      "channel": "ussd",
+
+      "card_type": "offline",
+
+      "bank": "Guaranty Trust Bank",
+
+      "country_code": "NG",
+
+      "brand": "offline",
+
+      "reusable": false,
+
+      "signature": null,
+
+      "account_name": null
+
+    },
+
+    "customer": {
+
+      "id": 16200,
+
+      "first_name": "John",
+
+      "last_name": "Doe",
+
+      "email": "customer@email.com",
+
+      "customer_code": "CUS_bpy9ciomcstg55y",
+
+      "phone": "",
+
+      "metadata": null,
+
+      "risk_action": "default"
+
+    },
+
+    "plan": {},
+
+    "subaccount": {},
+
+    "paidAt": "2018-06-25T12:42:58.000Z"
+
+  }
+
+}
+
+USSD recurring charge
+
+Charging returning customers directly is not currently available. Simply call the endpoint to start a new transaction.
+Mobile money
+Feature Availability
+
+This feature is only available to businesses in Ghana and Kenya.
+
+The Mobile Money channel allows your customers to pay you by using their phone number enabled for mobile money. At the point of payment, the customer is required to authorize the payment on the mobile phones.
+
+Since payment is completed offline, you need to have a webhook URL  which we’ll use to send the final status of the payment to your server.
+Create a charge
+
+To initiate a charge for mobile money, you need to make a POST request to the chargeAPI passing the customer’s email, amount, and mobile_money object:
+
+curl https://api.paystack.co/charge
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-H "Content-Type: application/json"
+
+-d '{ "amount": 100,
+
+      "email": "customer@email.com",
+
+      "currency": "GHS",
+
+      "mobile_money": {
+
+        "phone" : "0551234987",
+
+        "provider" : "mtn"
+
+      }
+
+    }'
+
+-X POST
+
+Provider code
+
+Here are the character codes for the supported mobile money providers:
+Provider	Code	Country
+MTN	mtn	Ghana
+AirtelTigo	atl	Ghana
+Vodafone	vod	Ghana
+M-Pesa	mpesa	Kenya
+
+On the successful creation of the charge, you need to handle the response based on the provider selected.
+AirtelTigo and MTN
+
+AirtelTigo and MTN requires the customer to complete the transaction process offline, the data.status field would be pay_offline, once you get this status, there's nothing left to do. You're expected to display the data.display_text to your user, and then listen for webhook for transaction notification or requery the verify transaction endpoint at interval.
+
+Here is a sample response that requires the customer to complete the process offline:
+
+    JSON
+
+{
+
+  "status": true,
+
+  "message": "Charge attempted",
+
+  "data": {
+
+    "reference": "8nn5fqljd0suybr",
+
+    "status": "pay_offline",
+
+    "display_text": "Please complete authorization process on your mobile phone"
+
+  }
+
+}
+
+Vodafone
+
+For Vodafone, the customer is required to generate a voucher code by dialing the USSD code show in the data.display_text field, this voucher code should be collected and passed to the submit OTPAPI endpoint to authorize the transaction.
+
+    JSON
+
+{
+
+  "status": true,
+
+  "message": "Charge attempted",
+
+  "data": {
+
+    "reference": "r13havfcdt7btcm",
+
+    "status": "send_otp",
+
+    "display_text": "Please dial *110# to generate a voucher code. Then input the voucher"
+
+  }
+
+}
+
+If the mobile money customer enters the otp on time and we are able to get a response just in time, we return the success response:
+
+    JSON
+
+{
+
+  "message": "Charge attempted",
+
+  "status": true,
+
+  "data": {
+
+    "amount": 100,
+
+    "channel": "mobile_money",
+
+    "created_at": "2018-11-17T14:39:56.000Z",
+
+    "currency": "GHS",
+
+    "domain": "live",
+
+    "fees": 153,
+
+    "gateway_response": "Approved",
+
+    "id": 59333,
+
+    "ip_address": "35.177.189.123, 162.158.155.220",
+
+    "message": "madePayment",
+
+    "paid_at": "2018-11-17T14:40:18.000Z",
+
+    "reference": "l7lvu4y3xcka6zu",
+
+    "status": "success",
+
+    "transaction_date": "2018-11-17T14:39:56.000Z",
+
+    "authorization": {
+
+      "authorization_code": "AUTH_33lz7ev5tq",
+
+      "bank": "MTN Mobile Money",
+
+      "bin": "055XXX",
+
+      "brand": "Mtn mobile money",
+
+      "channel": "mobile_money",
+
+      "country_code": "GH",
+
+      "exp_month": 12,
+
+      "exp_year": 9999,
+
+      "last4": "X149",
+
+      "reusable": false,
+
+      "account_name": null
+
+    },
+
+    "customer": {
+
+      "customer_code": "CUS_s3aa4mx0yyvrqye",
+
+      "email": "customer@email.com",
+
+      "id": 16763,
+
+      "risk_action": "default"
+
+    }
+
+  }
+
+}
+
+If the transaction is started successfully and the pin is not entered on time, we return this:
+
+    JSON
+
+{
+
+  "status": true,
+
+  "message": "Charge attempted",
+
+  "data": {
+
+    "reference": "84oow6t0rf715g6",
+
+    "status": "pending"
+
+  }
+
+}
+
+M-Pesa
+Feature Availability
+
+When creating the request for M-Pesa, you need to ensure that the phone number is formatted using the country code. For example, 0710000000 should be sent as +254710000000.
+
+With M-Pesa, the customer is required to use their PIN to authorize the payment. In the data object, we return a status of pay_offline and a display_text stating that the customer’s authorization is required to complete the payment:
+
+    JSON
+
+{
+
+  "status": true,
+
+  "message": "Charge attempted",
+
+  "data": {
+
+    "reference": "jq3psd5n96sprwl",
+
+    "status": "pay_offline",
+
+    "display_text": "Please complete authorization process on your mobile phone"
+
+  }
+
+}
+
+Handle response
+
+When the user completes payment, a response is sent to the merchant’s webhook. Hence, for this to work properly as expected, webhooks must be set up for the merchant.
+
+The charge.success event is raised on successful payment. The sample response to be sent to the user’s webhook would look like:
+
+    JSON
+
+{
+
+  "event": "charge.success",
+
+  "data": {
+
+    "id": 59214,
+
+    "domain": "live",
+
+    "status": "success",
+
+    "reference": "gf4n3ykzj6a7u89",
+
+    "amount": 100,
+
+    "message": "madePayment",
+
+    "gateway_response": "Approved",
+
+    "paid_at": "2018-11-15T06:10:54.000Z",
+
+    "created_at": "2018-11-15T06:10:32.000Z",
+
+    "channel": "mobile_money",
+
+    "currency": "GHS",
+
+    "ip_address": "18.130.236.148, 141.101.99.73",
+
+    "metadata": "",
+
+    "log": null,
+
+    "fees": 153,
+
+    "fees_split": null,
+
+    "authorization": {
+
+      "authorization_code": "AUTH_0aqm8ddx6s",
+
+      "bin": "055XXX",
+
+      "last4": "X149",
+
+      "exp_month": "12",
+
+      "exp_year": "9999",
+
+      "channel": "mobile_money",
+
+      "card_type": "",
+
+      "bank": "MTN Mobile Money",
+
+      "country_code": "GH",
+
+      "brand": "Mtn mobile money",
+
+      "reusable": false,
+
+      "signature": null,
+
+      "account_name": "BoJack Horseman"
+
+    },
+
+    "customer": {
+
+      "id": 16678,
+
+      "first_name": "Babafemi",
+
+      "last_name": "Aluko",
+
+      "email": "customer@email.com",
+
+      "customer_code": "CUS_2jk1i8ezoam49br",
+
+      "phone": "",
+
+      "metadata": null,
+
+      "risk_action": "allow"
+
+    },
+
+    "plan": {},
+
+    "subaccount": {},
+
+    "subaccount_group": {},
+
+    "paidAt": "2018-11-15T06:10:54.000Z"
+
+  }
+
+}
+
+Charging returning customers directly is not currently available. Simply call the endpoint to start a new transaction. We have some test credentials that can be used to run some tests.
+EFT
+
+EFT payments are an instant bank transfer payment method where customers pay merchants through their internet banking interfaces. When the developer specifies an EFT provider, we do a redirect to the providers platform where the customer provides their payment details after which the payment is authorized.
+Where is this available?
+
+This feature is only available to South African customers.
+Create a charge
+
+You need to send the email, amount, currency, and the EFT provider to the chargeAPI endpoint:
+Show Response
+
+curl https://api.paystack.co/charge
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-H "Content-Type: application/json"
+
+-d '{
+
+      "amount": 5000,
+
+      "currency": "ZAR",
+
+      "email": "customer@email.com",
+
+      "eft": {
+
+        "provider": "ozow"
+
+      }
+
+}'
+
+-X POST
+
+Available Providers
+
+Ozow is currently the only provider available.
+Handle response
+
+When the user completes payment, a response is sent to the merchant’s webhook. The merchant needs to setup webhooks to get the status of the payment. The charge.success event is raised on successful payment.
+QR code
+
+The QR option generates a QR code that allow customers to use a supported mobile app to complete payments.
+
+When the customer scans the code, they authenticate on a supported app to complete the payment. When the user pays, a response will be sent to your webhook. This means that you need to implement and set a webhook URL on your Paystack Dashboard.
+Create a charge
+
+Send an email and amount to the chargeAPI endpoint along with a qr object. The qr object should contain a provider parameter, specifying the QR provider for the transaction. The available QR providers are:
+Provider	Availability
+scan-to-pay	South Africa
+visa	Nigeria
+Supported Apps
+
+The scan-to-pay provider supports both SnapScan and Scan to Pay (formerly Masterpass) supported apps for completing a payment.
+Show Response
+
+curl https://api.paystack.co/charge
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-H "Content-Type: application/json"
+
+-d '{ "amount": 100,
+
+      "email": "customer@email.com",
+
+      "currency": "NGN",
+
+      "qr": {
+
+        "provider" : "visa"
+
+      }
+
+    }'
+
+-X POST
+
+Handle response
+
+When the user completes payment, a response is sent to the merchant’s webhook. Hence, for this to work properly as expected, webhooks must be set up for the merchant.
+
+The charge.success event is raised on successful payment. The sample response to be sent to the user’s webhook would look like:
+
+    JSON
+
+{
+
+  "event": "charge.success",
+
+  "data": {
+
+    "id": 59565,
+
+    "domain": "test",
+
+    "status": "success",
+
+    "reference": "48rx32f1womvcr4",
+
+    "amount": 10000,
+
+    "message": "madePayment",
+
+    "gateway_response": "Payment successful",
+
+    "paid_at": "2018-12-05T15:58:45.000Z",
+
+    "created_at": "2018-12-05T15:58:02.000Z",
+
+    "channel": "qr",
+
+    "currency": "NGN",
+
+    "ip_address": "18.130.45.28, 141.101.107.157",
+
+    "metadata": "",
+
+    "log": null,
+
+    "fees": null,
+
+    "fees_split": null,
+
+    "authorization": {
+
+      "authorization_code": "AUTH_2b4zs69fgy7qflh",
+
+      "bin": "483953",
+
+      "last4": "6208",
+
+      "exp_month": "12",
+
+      "exp_year": "2018",
+
+      "channel": "qr",
+
+      "card_type": "DEBIT",
+
+      "bank": "Visa QR",
+
+      "country_code": "NG",
+
+      "brand": "VISA",
+
+      "reusable": false,
+
+      "signature": null,
+
+      "account_name": "BoJack Horseman"
+
+    },
+
+    "customer": {
+
+      "id": 16787,
+
+      "first_name": "I",
+
+      "last_name": "SURRENDER",
+
+      "email": "customer@email.com",
+
+      "customer_code": "CUS_ehg851zbxon0bvx",
+
+      "phone": "",
+
+      "metadata": null,
+
+      "risk_action": "default"
+
+    },
+
+    "plan": {},
+
+    "subaccount": {},
+
+    "subaccount_group": {},
+
+    "paidAt": "2018-12-05T15:58:45.000Z"
+
+  }
+
+}
+
+QR code recurring charge
+
+Charging returning customers directly is currently not available. You need to call the endpoint to start a new transaction.
+Supported Apps
+
+In order to complete a payment, your customers can scan or enter the code in a supported application. Here are the supported applications by providers:
+Visa
+
+Customers can scan Visa QR codes from the following banking apps:
+
+    Ecobank
+    First Bank
+    Fidelity Bank
+    Access Bank
+    Access (Diamond) Bank
+    Zenith Bank
+
+SnapScan
+
+Customers can complete a payment in a snap by scanning the QR code with their SnapScan iOS or Android app.
+Scan to Pay
+
+Customers can use Scan to Pay (formerly Masterpass) QR codes from any of the mobile apps listed below:
+Banking Apps	Wallets	Standalone Scan to Pay
+Standard Bank	Ukheshe	Nedbank Scan to Pay
+FNB Banking	Spot (by Virgin Money)	Standard Bank Scan to Pay
+Nedbank Money	Vodapay	Absa Scan to Pay
+Capitec Bank	Telkom Pay	
+Absa	Instapay	
+RMB	Nedbank Avo       ,  Verify Payments
+In a nutshell
+
+The Verify Transaction API allows you confirm the status of a customer's transaction.
+Transaction statuses
+
+Webhooks are the preferred option for confirming a transaction status, but we currently send webhook events for just successful transactions. However, a transaction can have the following statuses:
+Status	Meaning
+abandoned	The customer has not completed the transaction.
+failed	The transaction failed. For more information on why, refer to the message/gateway response.
+ongoing	The customer is currently trying to carry out an action to complete the transaction. This can get returned when we're waiting on the customer to enter an otp or to make a transfer (for a pay with transfer transaction).
+pending	The transaction is currently in progress.
+processing	Same as pending, but for direct debit transactions.
+queued	The transaction has been queued to be processed later. Only possible on bulk charge transactions.
+reversed	The transaction was reversed. This could mean the transaction was refunded, or a chargeback was successfully logged for this transaction.
+success	The transaction was successfully processed.
+Verify a transaction
+
+You do this by making a GET request to the Verify TransactionAPI endpoint from your server using your transaction reference. This is dependent on the method you used to initialize the transaction.
+From Popup or Mobile SDKs
+
+You'll have to send the reference to your server, then from your server you call the verify endpoint.
+From the Redirect API
+
+You initiate this request from your callback URL. The transaction reference is returned as a query parameter to your callback URL.
+Helpful Tip
+
+If you offer digital value like airtime, wallet top-up, digital credit, etc, always confirm that you have not already delivered value for that transaction to avoid double fulfillments, especially, if you also use webhooks.
+
+Here's a code sample for verifying transactions:
+Show Response
+
+#!/bin/sh
+
+curl https://api.paystack.co/transaction/verify/:reference
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-X GET
+
+Warning
+
+The API response has a status key response.status indicating the status of the API call. This is not the status of the transaction. The status of the transaction is in the data object in the verify API response, i.e response.data.status. Learn more about Paystack API format.
+Charge returning Users
+
+The verify response also returns information about the payment instrument that the user paid with in the data.authorization object. If the channel is card, then you can store the authorization_code for that card against that user, and use that charge the user for subsequent transaction. Learn more about recurring charges.   Charges,Accept Payments
+In a nutshell
+
+To accept a payment, create a transaction using our API, our client Javascript library, Popup JS, or our SDKs. Every transaction includes a link that can be used to complete payment.
+Popup
+
+Paystack Popup is a Javascript library that allow developers to build a secure and convenient payment flow for their web applications. You can add it to your frontend application via CDN, NPM or Yarn:
+
+    CDNNPMYarn
+
+<script src="https://js.paystack.co/v2/inline.js">
+
+If you used NPM or Yarn, ensure you import the library as shown below:
+
+import PaystackPop from '@paystack/inline-js'
+
+With the library successfully installed, you can now begin the three-step integration process:
+
+    Initialize transaction
+    Complete transaction
+    Verify transaction status
+
+Initialize transaction
+
+To get started, you need to initialize the transaction from your backend. Initializing the transaction from the backend ensures you have full control of the transaction details. To do this, make a POST request from your backend to the Initialize TransactionAPI endpoint:
+Show Response
+
+curl https://api.paystack.co/transaction/initialize
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-H "Content-Type: application/json"
+
+-d '{ "email": "customer@email.com", 
+
+      "amount": "500000"
+
+    }'
+
+-X POST
+
+The data object of the response contains an access_code parameter that is needed to complete the transaction. You should store this parameter and send it to your frontend.
+Do not use your secret key in your frontend
+
+Never call the Paystack API directly from your frontend to avoid exposing your secret key on the frontend. All requests to the Paystack API should be initiated from your server, and your frontend gets the response from your server.
+Complete transaction
+
+Your frontend application should make a request to your backend to initialize the transaction and get the access_code as described in the previous section. On getting the access_code from your backend, you can then use Popup to complete the transaction:
+
+const popup = new PaystackPop()
+
+popup.resumeTransaction(access_code)
+
+The resumeTransaction method triggers the checkout in the browser, allowing the user to choose their preferred payment channel to complete the transaction. You can check out the InlineJS reference guide to learn about the features available in Popup V2.
+Verify transaction status
+
+Finally, you need to confirm the status of the transaction by using either webhooks or the verify transactions endpoint. Regardless of the method used, you need to use the following parameter to confirm if you should deliver value to your customer or not:
+Parameter	Description
+data.status	This inidicates if the payment is successful or not
+data.amount	This indicates the price of your product or service in the lower denomination of your currency.
+Verify amount
+
+When verifying the status of a transaction, you should also verify the amount to ensure it matches the value of the service you are delivering. If the amount doesn't match, do not deliver value to the customer.
+Redirect
+
+Here, you call the Initialize TransactionAPI from your server to generate a checkout link, then redirect your users to the link so they can pay. After payment is made, the users are returned to your website at the callback_url
+Warning
+
+Confirm that your server can conclude a TLSv1.2 connection to Paystack's servers. Most up-to-date software have this capability. Contact your service provider for guidance if you have any SSL errors.
+Collect customer information
+
+To initialize the transaction, you'll need to pass information such as email, first name, last name amount, transaction reference, etc. Email and amount are required. You can also pass any other additional information in the metadata object field.
+
+The customer information can be retrieved from your database, session or cookie if you already have it stored, or from a form like in the example below.
+
+    HTML
+
+<form action="/save-order-and-pay" method="POST"> 
+
+  <input type="hidden" name="user_email" value="<?php echo $email; ?>"> 
+
+  <input type="hidden" name="amount" value="<?php echo $amount; ?>"> 
+
+  <input type="hidden" name="cartid" value="<?php echo $cartid; ?>"> 
+
+  <button type="submit" name="pay_now" id="pay-now" title="Pay now">Pay now</button>
+
+</form>
+
+Initialize transaction
+
+When a customer clicks the payment action button, initialize a transaction by making a POST request to our API. Pass the email, amount and any other parameters to the Initialize TransactionAPI endpoint.
+
+If the API call is successful, we will return an authorization URL which you will redirect to for the customer to input their payment information to complete the transaction.
+
+Important notes
+
+    The amount should be in the subunit of the supported currency.
+    We used the cart_id from the form above as our transaction reference. You should use a unique transaction identifier from your system as your reference.
+    We set the callback_url in the transaction_data array. If you don't do this, we'll use the one that is set on your dashboard. Setting it in the code allows you to be flexible with the redirect URL if you need to
+    If you don't set a callback URL on the dashboard or on the code, the users will not be redirected back to your site after payment.
+    You can set test callback URLs for test transactions and live callback URLs for live transactions.
+
+    PHP
+
+<?php
+
+  $url = "https://api.paystack.co/transaction/initialize";
+
+
+  $fields = [
+
+    'email' => "customer@email.com",
+
+    'amount' => "20000",
+
+    'callback_url' => "https://hello.pstk.xyz/callback",
+
+    'metadata' => ["cancel_action" => "https://your-cancel-url.com"]
+
+  ];
+
+
+  $fields_string = http_build_query($fields);
+
+
+  //open connection
+
+  $ch = curl_init();
+
+  
+
+  //set the url, number of POST vars, POST data
+
+  curl_setopt($ch,CURLOPT_URL, $url);
+
+  curl_setopt($ch,CURLOPT_POST, true);
+
+  curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+
+  curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+
+    "Authorization: Bearer SECRET_KEY",
+
+    "Cache-Control: no-cache",
+
+  ));
+
+  
+
+  //So that curl_exec returns the contents of the cURL; rather than echoing it
+
+  curl_setopt($ch,CURLOPT_RETURNTRANSFER, true); 
+
+  
+
+  //execute post
+
+  $result = curl_exec($ch);
+
+  echo $result;
+
+?>
+
+Verify Transaction
+
+If the transaction is successful, Paystack will redirect the user back to a callback_url you set. We'll append the transaction reference in the URL. In the example above, the user will be redirected to http://your_website.com/postpayment_callback.php?reference=YOUR_REFERENCE.
+
+So you retrieve the reference from the URL parameter and use that to call the verify endpoint to confirm the status of the transaction. Learn more about verifying transactions.
+
+It's very important that you call the Verify endpoint to confirm the status of the transactions before delivering value. Just because the callback_url was visited doesn't prove that transaction was successful.
+Handle Webhook
+
+When a payment is successful, Paystack sends a charge.success webhook event to webhook URL that you provide. Learn more about using webhooks.
+Mobile SDKs
+
+With our mobile SDKs, we provide a collection of methods and interfaces tailored to the aesthetic of the platform. Transactions are initiated on the server and completed in the SDK. The SDK requires an access_code to display the UI component that accepts payment.
+
+To get the access_code, you need to initialize a transaction by making a POST request on your server to the Initialize TransactionAPI endpoint:
+Show Response
+
+curl https://api.paystack.co/transaction/initialize
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-H "Content-Type: application/json"
+
+-d '{ "email": "customer@email.com", 
+
+      "amount": "500000"
+
+    }'
+
+-X POST
+
+On a successful initialization of the transaction, you get a response that contains an access_code. You need to return this access_code back to your mobile app.
+Secret key safeguarding
+
+Do not make an API request to the Initialize Transaction endpoint directly on your mobile app because it requires your secret key. Your secret key should only be used on your server where stronger security measures can be put in place.
+
+With the access_code in place, you can now use the SDKs to complete the transaction.
+Android SDK
+
+You need to install the SDK by adding the paystack-ui dependency to the dependencies block of your app-level build.gradle file:
+Latest dependency version
+
+You should check Maven Central to get the latest version before installation.
+
+    build.gradle
+
+dependencies {
+
+  implementation 'com.paystack.android:paystack-ui:0.0.9'
+
+}
+
+With all the requirements for accepting payment now in place, you can initialize and use the SDK as shown below:
+
+    KotlinJava
+
+// other imports
+
+
+import com.paystack.android.core.Paystack
+
+import com.paystack.android.ui.paymentsheet.PaymentSheet
+
+import com.paystack.android.ui.paymentsheet.PaymentSheetResult
+
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var paymentSheet: PaymentSheet
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+
+        super.onCreate(savedInstanceState)
+
+        // Other code snippets
+
+
+        Paystack.builder()
+
+            .setPublicKey("pk_test_xxxx")
+
+            .build()
+
+        paymentSheet = PaymentSheet(this, ::paymentComplete)
+
+
+    }
+
+
+    private fun makePayment() {
+
+        // Pass access_code from transaction initialize call
+
+        paymentSheet.launch("br6cgmvflhn3qtd")
+
+    }
+
+
+
+    private fun paymentComplete(paymentSheetResult: PaymentSheetResult) {
+
+        val message = when (paymentSheetResult) {
+
+            PaymentSheetResult.Cancelled -> "Cancelled"
+
+            is PaymentSheetResult.Failed -> {
+
+                Log.e("Something went wrong", paymentSheetResult.error.message.orEmpty(), paymentSheetResult.error)
+
+                paymentSheetResult.error.message ?: "Failed"
+
+            }
+
+
+            is PaymentSheetResult.Completed -> {
+
+                // Returns the transaction reference  PaymentCompletionDetails(reference={TransactionRef})
+
+                Log.d("Payment successful", paymentSheetResult.paymentCompletionDetails.toString())
+
+                "Successful"
+
+            }
+
+        }
+
+    }
+
+}
+
+You can check out the Android SDK reference to learn more about the methods and interfaces available for integration.
+iOS SDK
+
+The installation of the SDK can be done via the Swift Package Manager. To add the required packages, ensure you have the latest version of XCode installed and follow these steps:
+
+    Select File > Add Package Dependencies…
+    Copy the repo URL and paste it in the search box of the package dependency popup
+
+You can read the Swift Package Manager documentation to learn more about adding packages to your project.
+
+With all the requirements for accepting payment now in place, you can initialize and use the SDK:
+
+    SwiftUIUIKit
+
+import SwiftUI
+
+import PaystackCore
+
+import PaystackUI
+
+
+struct PaymentView: View {
+
+	let paystack = try? PaystackBuilder
+
+			.newInstance
+
+			.setKey("pk_domain_xxxxxxxx")
+
+			.build()
+
+
+	var body: some View {
+
+		VStack(spacing: 8) {
+
+			Text("Make Payemnt")
+
+
+			paystack?.chargeUIButton(accessCode: "0peioxfhpn", onComplete: paymentDone) {
+
+				Text("Initiate Payment")
+
+			}
+
+		}
+
+		.padding()
+
+	}
+
+
+	func paymentDone(_ result: TransactionResult) {
+
+		// Handle transaction result
+
+		print(result)
+
+	}
+
+}
+
+
+// ....
+
+You can check out the iOS SDK reference to learn more about the methods and interfaces available for integration.
+Charge API
+
+The Create ChargeAPI endpoint allows you to pass details of any payment channel directly to Paystack, along with the transaction details (email, amount, etc). We provide a couple of payment channels that you can harness based on your use case.
+Use cases
+
+The Charge API exposes the core components powering our checkout. Developers can use these component to develop solutions that will cater to their customers specific needs. Some of these needs include:
+
+    Serving non-smartphone users. Some of your users might be using mobile phones that can't access the internet. With the charge API, you can initiate a payment request form your server and send a prompt for payment completion via phone numbers to these users.
+    Harnessing mobile OS APIs for a better user experience. Some businesses offer their products via mobile apps (Android and iOS). Mobile operating systems provide a rich set of APIs that developers can take advantage of. One of such APIs allow developers to autofill an OTP in a form. There are also APIs for dialing codes. Developers can combine the charge API with the mobile OS APIs to provide a richer experience to their users. 
+
+Here is a sample payload to the Charge API containing transaction details and an object for a payment instrument - in this case Mobile money:
+
+    JSON
+
+{
+
+  "amount": 1000,
+
+  "email": "customer@email.com",
+
+  "currency": "GHS",
+
+  "mobile_money": {
+
+    "phone": "0553241149",
+
+    "provider": "MTN"
+
+  }
+
+}
+
+Handling Charge API responses
+
+When you call the Create ChargeAPI endpoint, the response contains a data.status which tells you what the next step in the process. Depending on the value in the data.status, you may need to prompt the user for an input as indicated in the response message (like OTP or pin or date of birth), or display an action that the user needs to complete on their device - like scanning a QR code or dialling a USSD code or redirecting to a 3DSecure page. So you follow the prompt on the data.status until there is no more user input required, then you listen for events via webhooks.
+
+For the steps that prompt for user input, you will be required to display a form to the user to collect the requested input and send it to the relevant endpoint as shown in the table below. For the steps that require the user to complete an action on their device, we recommend that you display a button for the user to confirm the payment after they have performed that action so that you can listen for events via webhooks.
+
+Below is the list of responses you can receive from the Create ChargeAPI endpoint and what you should do next:
+Value	Description
+pending	Transaction is being processed. Call Check pending charge at least 10seconds after getting this status to check status
+timeout	Transaction has failed. You may start a new charge after showing data.message to user
+success	Transaction is successful. You can now provide value
+send_birthday	Customer's birthday is needed to complete the transaction. Show data.display_text to user with an input that accepts the birthdate and submit to the Submit BirthdayAPI endpoint with reference and birthday
+send_otp	Paystack needs OTP from customer to complete the transaction. Show data.display_text to user with an input that accepts OTP and submit the OTP to the Submit OTPAPI endpoint with reference and otp
+failed	Transaction failed. No remedy for this, start a new charge after showing data.message to user
+Handle Webhook
+
+When a payment is successful, Paystack sends a charge.success webhook event to webhook URL that you provide. It is highly recommended that you use webhooks to confirm the payment status before delivering value to your customers.
+The Charge API allows you to configure payment channel of your choice when initiating a payment.
+Create Charge
+
+Initiate a payment by integrating the payment channel of your choice.
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+content-type
+String
+	Set value to application/json
+Body Parameters
+email
+String
+	Customer's email address
+amount
+String
+	Amount in subunit of the supported currency
+split_code
+String
+	
+The split code of a previously created split. e.g. SPL_98WF13Eb3w
+subaccount
+String
+	
+The code for the subaccount that owns the payment. e.g. ACCT_8f4s1eq7ml6rlzj
+transaction_charge
+Integer
+	
+An amount used to override the split configuration for a single split payment. If set, the amount specified goes to the main account regardless of the split configuration.
+bearer
+String
+	
+Use this param to indicate who bears the transaction charges. Allowed values are: account or subaccount (defaults to account).
+bank
+Object
+	
+Bank account to charge (don't send if charging an authorization code)
+bank_transfer
+Object
+	
+Takes the settings for the Pay with Transfer (PwT) channel. Pass in the account_expires_at param to set the expiry time.
+ussd
+Object
+	
+USSD type to charge (don't send if charging an authorization code, bank or card)
+mobile_money
+Object
+	
+Mobile details (don't send if charging an authorization code, bank or card)
+qr
+Object
+	
+Takes a provider object with the either of the following values: scan-to-pay, visa
+authorization_code
+String
+	
+An authorization code to charge (don't send if charging a bank account)
+pin
+String
+	
+4-digit PIN (send with a non-reusable authorization code)
+metadata
+Object
+	
+Used for passing additional details for your post-payment processes
+reference
+String
+	
+Unique transaction reference. Only -, .`, = and alphanumeric characters allowed.
+device_id
+String
+	
+This is the unique identifier of the device a user uses in making payment. Only -, .`, = and alphanumeric characters allowed.
+Show optional parameters
+POST/charge
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/charge"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+content_type="Content-Type: application/json"
+
+data='{ 
+
+  "email": "customer@email.com",
+
+  "amount": "10000",
+
+  "metadata": {
+
+    "custom_fields": [
+
+      {
+
+        "value": "makurdi",
+
+        "display_name": "Donation for",
+
+        "variable_name": "donation_for"
+
+      }
+
+    ]
+
+  },
+
+  "bank": {
+
+      code: "057",
+
+      account_number: "0000000000"
+
+  },
+
+  "birthday": "1995-12-23"
+
+}'
+
+
+curl "$url" -H "$authorization" -H "$content_type" -d "$data" -X POST
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Charge attempted",
+
+  "data": {
+
+    "amount": 200,
+
+    "currency": "NGN",
+
+    "transaction_date": "2017-05-24T05:56:12.000Z",
+
+    "status": "success",
+
+    "reference": "zuvbpizfcf2fs7y",
+
+    "domain": "test",
+
+    "metadata": {
+
+      "custom_fields": [
+
+        {
+
+          "display_name": "Merchant name",
+
+          "variable_name": "merchant_name",
+
+          "value": "Van Damme"
+
+        },
+
+        {
+
+          "display_name": "Paid Via",
+
+          "variable_name": "paid_via",
+
+          "value": "API call"
+
+        }
+
+      ]
+
+    },
+
+    "gateway_response": "Successful",
+
+    "message": null,
+
+    "channel": "card",
+
+    "ip_address": "54.154.89.28, 162.158.38.82, 172.31.38.35",
+
+    "log": null,
+
+    "fees": 3,
+
+    "authorization": {
+
+      "authorization_code": "AUTH_6tmt288t0o",
+
+      "bin": "408408",
+
+      "last4": "4081",
+
+      "exp_month": "12",
+
+      "exp_year": "2020",
+
+      "channel": "card",
+
+      "card_type": "visa visa",
+
+      "bank": "TEST BANK",
+
+      "country_code": "NG",
+
+      "brand": "visa",
+
+      "reusable": true,
+
+      "signature": "SIG_uSYN4fv1adlAuoij8QXh",
+
+      "account_name": "BoJack Horseman"
+
+    },
+
+    "customer": {
+
+      "id": 14571,
+
+      "first_name": null,
+
+      "last_name": null,
+
+      "email": "test@email.co",
+
+      "customer_code": "CUS_hns72vhhtos0f0k",
+
+      "phone": null,
+
+      "metadata": null,
+
+      "risk_action": "default"
+
+    },
+
+    "plan": null
+
+  }
+
+}
+
+Submit PIN
+
+Submit PIN to continue a charge
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+content-type
+String
+	Set value to application/json
+Body Parameters
+pin
+String
+	PIN submitted by user
+reference
+String
+	Reference for transaction that requested pin
+POST/charge/submit_pin
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/charge/submit_pin"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+content_type="Content-Type: application/json"
+
+data='{ 
+
+  "pin": "1234", 
+
+  "reference": "5bwib5v6anhe9xa"
+
+}'
+
+
+curl "$url" -H "$authorization" -H "$content_type" -d "$data" -X POST
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Charge attempted",
+
+  "data": {
+
+    "id": 2046671778,
+
+    "domain": "test",
+
+    "status": "success",
+
+    "reference": "36xz3b9rie9ppvz",
+
+    "amount": 10000,
+
+    "message": "madePayment",
+
+    "gateway_response": "Approved",
+
+    "paid_at": "2022-08-24T12:00:18.000Z",
+
+    "created_at": "2022-08-24T11:58:41.000Z",
+
+    "channel": "bank",
+
+    "currency": "NGN",
+
+    "ip_address": "172.31.68.204",
+
+    "metadata": "",
+
+    "log": null,
+
+    "fees": 50,
+
+    "fees_split": null,
+
+    "authorization": {
+
+      "authorization_code": "AUTH_nrp5ly1goc",
+
+      "bin": "000XXX",
+
+      "last4": "X000",
+
+      "exp_month": "12",
+
+      "exp_year": "9999",
+
+      "channel": "bank",
+
+      "card_type": "",
+
+      "bank": "Zenith Bank",
+
+      "country_code": "NG",
+
+      "brand": "Zenith Emandate",
+
+      "reusable": false,
+
+      "signature": null,
+
+      "account_name": null
+
+    },
+
+    "customer": {
+
+      "id": 44494174,
+
+      "first_name": null,
+
+      "last_name": null,
+
+      "email": "charge@email.com",
+
+      "customer_code": "CUS_cm4hqzmhg0u0ded",
+
+      "phone": null,
+
+      "metadata": null,
+
+      "risk_action": "default",
+
+      "international_format_phone": null
+
+    },
+
+    "plan": null,
+
+    "split": {},
+
+    "order_id": null,
+
+    "paidAt": "2022-08-24T12:00:18.000Z",
+
+    "createdAt": "2022-08-24T11:58:41.000Z",
+
+    "requested_amount": 10000,
+
+    "pos_transaction_data": null,
+
+    "source": null,
+
+    "fees_breakdown": null,
+
+    "transaction_date": "2022-08-24T11:58:41.000Z",
+
+    "plan_object": {},
+
+    "subaccount": {}
+
+  }
+
+}

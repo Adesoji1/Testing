@@ -1,3 +1,4 @@
+#app/api/endpoints/user/documents.py
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, BackgroundTasks # type: ignore
 import openai
 from sqlalchemy.orm import Session
@@ -149,7 +150,7 @@ def upload_document(
         )
         document = create_document(
             db=db,
-            document=document_data,
+            document_data=document_data,
             user_id=user.id,
             file_key=file_key,
             file_size=len(file_content),

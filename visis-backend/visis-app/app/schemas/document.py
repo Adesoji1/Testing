@@ -1,4 +1,4 @@
-# schemas/document.py
+#app/schemas/document.py
 from pydantic import BaseModel, HttpUrl
 from datetime import datetime
 from typing import Optional, List

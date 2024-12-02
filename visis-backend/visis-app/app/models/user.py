@@ -52,3 +52,6 @@ class User(Base):
     accessibility = relationship("Accessibility", back_populates="user")
     activities = relationship("UserActivity", back_populates="user")
     feedbacks = relationship("Feedback", back_populates="user")
+    donations = relationship("Donation", back_populates="user")
+    transactions = relationship("Transaction", back_populates="user")
+    subscriptions = relationship("Subscription", back_populates="user")
