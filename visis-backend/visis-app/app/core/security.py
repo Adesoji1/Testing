@@ -8,6 +8,10 @@ from app.models.user import User
 from app.core.config import settings
 from app.schemas.token import TokenData
 from app.services.blacklist_service import is_token_blacklisted 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 # Password hashing context using bcrypt
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -29,6 +33,7 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
+    logger.debug("get_current_user called")
     """Get current user from the JWT access token."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

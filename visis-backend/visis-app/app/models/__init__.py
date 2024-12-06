@@ -1,3 +1,4 @@
+#app/models/__init__.py
 from app.database import Base 
 from .user import User
 from .user_preference import UserPreference
@@ -15,6 +16,7 @@ from .app_setting import AppSetting
 from .donation import Donation
 from .transaction import Transaction
 from .subscription import Subscription
+from .refund import Refund
 
 
 # Export all models and Base for use in migrations and elsewhere
@@ -36,5 +38,6 @@ __all__ = [
      "Donation",
     "Transaction",
     "Subscription",
+    "Refund"
 ]
 # print("Initializing models: importing AudioBook")

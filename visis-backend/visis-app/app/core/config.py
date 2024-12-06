@@ -2,10 +2,10 @@
 
 
 from pydantic_settings import BaseSettings
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, validator
 import dotenv
 import os
-from typing import Optional
+from typing import Optional,Tuple
 
 dotenv.load_dotenv()
 
@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     PAYSTACK_SECRET_KEY: str = os.getenv("PAYSTACK_SECRET_KEY")
     PAYSTACK_PUBLIC_KEY: str = os.getenv("PAYSTACK_PUBLIC_KEY")
     PAYSTACK_CALLBACK_URL: str = os.getenv("PAYSTACK_CALLBACK_URL")  # URL where Paystack redirects after payment
+    PAYSTACK_TRANSACTION_CALLBACK_URL: str = os.getenv("PAYSTACK_TRANSACTION_CALLBACK_URL") 
     PAYSTACK_PLAN_CODE: str = os.getenv("PAYSTACK_PLAN_CODE")  # Your Plan Code
 
     # Email configuration
@@ -64,6 +65,63 @@ class Settings(BaseSettings):
     EMAIL_USE_TLS: bool = Field(True, env="EMAIL_USE_TLS")
     EMAIL_FROM: str = Field("no-reply@vinsighte.com.ng", env="EMAIL_FROM")
 
+    # Rate Limiting
+    RATE_LIMIT: str = Field(
+        default="100/minute",
+        description="Maximum requests per period (e.g., '100/minute')",
+    )
+    # RATE_LIMIT: Tuple[int, str] = Field(
+    #     default=(100, "minute"),
+    #     description="Maximum requests per period (e.g., 100 requests per minute)",
+    # )
+
+    @field_validator("RATE_LIMIT", mode="before")
+    def validate_rate_limit(cls, value: str) -> str:
+        """
+        Validate and parse the RATE_LIMIT environment variable.
+        Expected format: '100/minute'
+        """
+        if isinstance(value, str):
+            try:
+                requests, period = value.split("/")
+                requests = int(requests)  # Ensure the request count is an integer
+                period = period.strip().lower()
+                if period not in ["second", "minute", "hour", "day"]:
+                    raise ValueError("Invalid period for RATE_LIMIT. Use 'second', 'minute', 'hour', or 'day'.")
+                return f"{requests} per {period}"
+            except ValueError:
+                raise ValueError("RATE_LIMIT must be in the format 'number/period', e.g., '100/minute'")
+        else:
+            raise ValueError("RATE_LIMIT must be a string in the format 'number/period'")
+
+    # @field_validator("RATE_LIMIT", mode="before")
+    # def validate_rate_limit(cls, value: str) -> Tuple[int, str]:
+    #     """
+    #     Validate and parse the RATE_LIMIT environment variable.
+    #     Expected format: "100/minute"
+    #     """
+    #     if isinstance(value, tuple):
+    #         # If already a tuple, return as is
+    #         return value
+    #     try:
+    #         requests, period = value.split("/")
+    #         requests = int(requests)  # Ensure the request count is an integer
+    #         return (requests, period)
+    #     except ValueError:
+    #         raise ValueError("RATE_LIMIT must be in the format 'number/period', e.g., '100/minute'")
+
+    # @validator("RATE_LIMIT", pre=True)
+    # def validate_rate_limit(cls, value: str) -> Tuple[int, str]:
+    #     # Split and parse the RATE_LIMIT format "100/minute"
+    #     if isinstance(value, tuple):  # If already parsed, return as is
+    #         return value
+    #     try:
+    #         requests, period = value.split("/")
+    #         requests = int(requests)  # Ensure the request count is an integer
+    #         return requests, period.strip.lower()
+    #     except ValueError:
+    #         raise ValueError("RATE_LIMIT must be in the format 'number/period', e.g., '100/minute'")
+
     @field_validator("EMAIL_PORT",mode="before")
     def parse_email_port(cls, value):
         """Strip and parse EMAIL_PORT to an integer, ensuring it is valid."""
@@ -71,6 +129,12 @@ class Settings(BaseSettings):
             return int(str(value).strip().split()[0])  # Extracts the first numeric part
         except ValueError:
             raise ValueError(f"Invalid EMAIL_PORT: {value}. Ensure it is a valid integer.")
+        
+    # # Logging Configuration
+    # LOG_LEVEL: str = Field(
+    #     default="INFO",
+    #     description="Logging level for the application (e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL)"
+    # )
 
     
   
