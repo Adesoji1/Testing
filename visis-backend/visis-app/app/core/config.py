@@ -45,10 +45,19 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, description="Access token expiry")
     REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7, description="Refresh token expiry")
 
-    REDIS_HOST: str = "localhost"
+    # #localhost
+    # REDIS_HOST: str = "localhost"
+    # REDIS_PORT: int = 6379
+    # REDIS_DB: int = 0
+    # REDIS_CACHE_TTL: int = 80640 # Cache TTL in seconds (e.g., 55 days)
+    
+    ##prod
+    REDIS_HOST: str
     REDIS_PORT: int = 6379
+    REDIS_PASSWORD: Optional[str] = None
     REDIS_DB: int = 0
-    REDIS_CACHE_TTL: int = 80640 # Cache TTL in seconds (e.g., 55 days)
+    REDIS_CACHE_TTL: int = 300 # Cache TTL in seconds (e.g., 55 days)
+    
 
     #Paystack configuration
     PAYSTACK_SECRET_KEY: str = os.getenv("PAYSTACK_SECRET_KEY")
