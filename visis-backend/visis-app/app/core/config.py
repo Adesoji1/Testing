@@ -52,11 +52,16 @@ class Settings(BaseSettings):
     # REDIS_CACHE_TTL: int = 80640 # Cache TTL in seconds (e.g., 55 days)
     
     ##prod
-    REDIS_HOST: str
-    REDIS_PORT: int = 6379
-    REDIS_PASSWORD: Optional[str] = None
-    REDIS_DB: int = 0
-    REDIS_CACHE_TTL: int = 300 # Cache TTL in seconds (e.g., 55 days)
+    REDIS_HOST: str = Field(..., env='REDIS_HOST')
+    REDIS_PORT: int = Field(6379, env='REDIS_PORT')
+    REDIS_PASSWORD: Optional[str] = Field(None, env='REDIS_PASSWORD')
+    REDIS_DB: int = Field(0, env='REDIS_DB')
+    REDIS_CACHE_TTL: int = Field(300, env='REDIS_CACHE_TTL')  # 
+    # REDIS_HOST: str
+    # REDIS_PORT: int = 6379
+    # REDIS_PASSWORD: Optional[str] = None
+    # REDIS_DB: int = 0
+    # REDIS_CACHE_TTL: int = 300 # Cache TTL in seconds (e.g., 55 days)
     
 
     #Paystack configuration
