@@ -8,11 +8,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository (optional if not needed)
+      - name: Checkout repository (optional)
         uses: actions/checkout@v2
 
-      # Step 1: Verify/install Docker Compose on the EC2 instance
-      # This ensures docker-compose command is available.
       - name: Install Docker Compose on EC2
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -20,16 +18,21 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Ensure /usr/local/bin directory exists
+            sudo mkdir -p /usr/local/bin
+            
             # Update packages
             sudo apt-get update -y
+            
             # Install curl if not present
             sudo apt-get install -y curl
-            # Install docker-compose (version 1.29.2 as an example)
-            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            
+            # Install docker-compose
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
+                 -o /usr/local/bin/docker-compose
             sudo chmod +x /usr/local/bin/docker-compose
             docker-compose --version
 
-      # Step 2: Deploy the application using Docker Compose
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -38,14 +41,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ubuntu/app
-            # Pull the latest image
             docker-compose pull
-            
-            # Optionally stop running containers
             docker-compose down
-            
-            # Rebuild and run in detached mode
             docker-compose up -d --build
-            
-            # Optional: Show running containers
             docker-compose ps
