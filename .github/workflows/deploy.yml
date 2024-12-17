@@ -8,32 +8,44 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Check out the repository (optional if you need code context)
-      - name: Checkout repository
+      - name: Checkout repository (optional if not needed)
         uses: actions/checkout@v2
 
-      # Install SSH client if needed (usually available by default)
-      - name: Ensure SSH is installed
-        run: sudo apt-get update && sudo apt-get install -y ssh
-
-      # Connect to EC2 and run Docker Compose
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v0.1.7
+      # Step 1: Verify/install Docker Compose on the EC2 instance
+      # This ensures docker-compose command is available.
+      - name: Install Docker Compose on EC2
+        uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          # Change to your app directory, pull the latest image, and restart using docker-compose
+          script: |
+            # Update packages
+            sudo apt-get update -y
+            # Install curl if not present
+            sudo apt-get install -y curl
+            # Install docker-compose (version 1.29.2 as an example)
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+            docker-compose --version
+
+      # Step 2: Deploy the application using Docker Compose
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ubuntu/app
-            # Pull the latest image from registry
+            # Pull the latest image
             docker-compose pull
             
-            # (Optional) Stop currently running containers if needed
+            # Optionally stop running containers
             docker-compose down
             
             # Rebuild and run in detached mode
             docker-compose up -d --build
             
-            # Optional: Check logs or status
+            # Optional: Show running containers
             docker-compose ps
