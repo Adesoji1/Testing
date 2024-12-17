@@ -1,53 +1,39 @@
-name: CI/CD Pipeline
+name: Deploy to EC2
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: adesojialu/visiszipnov26_app:latest
-
   deploy:
-    needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v0.1.4
+      # Check out the repository (optional if you need code context)
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Install SSH client if needed (usually available by default)
+      - name: Ensure SSH is installed
+        run: sudo apt-get update && sudo apt-get install -y ssh
+
+      # Connect to EC2 and run Docker Compose
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
+          # Change to your app directory, pull the latest image, and restart using docker-compose
           script: |
-            # Navigate to the project directory
-            cd ~/fastapi_project
-
-            # Pull the latest Docker image
+            cd /home/ubuntu/app
+            # Pull the latest image from registry
             docker-compose pull
-
-            # Restart the containers
-            docker-compose up -d --remove-orphans
+            
+            # (Optional) Stop currently running containers if needed
+            docker-compose down
+            
+            # Rebuild and run in detached mode
+            docker-compose up -d --build
+            
+            # Optional: Check logs or status
+            docker-compose ps
