@@ -65,7 +65,7 @@ jobs:
       
       - name: Show environment
         run: env
-
+       #Later add the steps for docker build,login and push from the github folder
       - name: Pull and Run Containers
         working-directory: /home/ubuntu/fastapi_project
         run: |
