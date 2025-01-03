@@ -101,14 +101,15 @@ jobs:
       
       - name: Show environment
         run: env
+
       - name: Pull and Run Containers
         working-directory: /home/ubuntu/fastapi_project
         run: |
-          # Stop all running containers
-          docker-compose down
-          # Force remove the network if it still exists
-          docker network rm fastapi_project_default || true
-          # Rebuild and run containers in detached mode
+          # Stop all running containers and remove orphans
+          docker-compose down --remove-orphans
+          # Force remove any lingering networks
+          docker network prune -f
+          # Rebuild and run containers with the updated compose file
           docker-compose up -d --build
           # Show running containers
           docker-compose ps
@@ -116,14 +117,16 @@ jobs:
       # - name: Pull and Run Containers
       #   working-directory: /home/ubuntu/fastapi_project
       #   run: |
-      #     # Pull updated images
-      #     docker-compose pull
-      #     # Stop any running containers
+      #     # Stop all running containers
       #     docker-compose down
+      #     # Force remove the network if it still exists
+      #     docker network rm fastapi_project_default || true
       #     # Rebuild and run containers in detached mode
       #     docker-compose up -d --build
       #     # Show running containers
       #     docker-compose ps
+
+ 
 
       - name: Show Nginx Logs
         working-directory: /home/ubuntu/fastapi_project
