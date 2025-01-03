@@ -132,5 +132,6 @@ jobs:
         working-directory: /home/ubuntu/fastapi_project
         run: |
           # Display Nginx logs to verify deployment
-          docker logs $(docker ps -q --filter "ancestor=nginx")
+          docker logs nginx_proxy
+          #docker logs $(docker ps -q --filter "ancestor=nginx")
 
