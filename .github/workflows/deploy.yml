@@ -36,9 +36,6 @@
 
 
 
-
-
-
 name: Deploy to EC2
 
 on:
@@ -61,9 +58,9 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
         run: |
-          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin || exit 1
-          docker build -t adesojialu/visiszipnov26_app:latest ./visis-backend/visis-app || exit 1
-          docker push adesojialu/visiszipnov26_app:latest || exit 1
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          docker build -t adesojialu/visiszipnov26_app:latest ./visis-backend/visis-app
+          docker push adesojialu/visiszipnov26_app:latest
 
       # Step 3: Copy static files to EC2
       - name: Sync Static Files
@@ -90,7 +87,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/docker-compose.local.yml $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/docker-compose.yml
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
             cd /home/ubuntu/fastapi_project &&
-            docker-compose -f docker-compose.yml down --remove-orphans -v &&
+            docker-compose -f docker-compose.yml down --remove-orphans &&
             docker-compose -f docker-compose.yml up -d --build --cpus=\"2.0\" --memory=\"2g\" &&
             docker-compose ps
           "
@@ -106,3 +103,4 @@ jobs:
             docker logs fastapi_app &&
             docker logs nginx_proxy
           "
+
