@@ -44,8 +44,8 @@ services:
     ports:
       - "80:80"  # Exposing Nginx on port 80
     volumes: 
-      - ./Testing/visis-backend/visis-app/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./Testing/visis-backend/visis-app/static:/usr/share/nginx/html/static:ro
+      - ./visis-backend/visis-app/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./visis-backend/visis-app/static:/usr/share/nginx/html/static:ro
     networks:
       - app_network
     restart: always

@@ -62,7 +62,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
         run: |
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-          docker build -t vinsighte/fastapi_app:latest ./Testing/visis-backend/visis-app
+          docker build -t vinsighte/fastapi_app:latest ./visis-backend/visis-app
           docker push vinsighte/fastapi_app:latest
 
       # Step 3: Copy static files to EC2
@@ -75,7 +75,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          rsync -e "ssh -o StrictHostKeyChecking=no" -avz ./Testing/visis-backend/visis-app/static/ $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/static/
+          rsync -e "ssh -o StrictHostKeyChecking=no" -avz ./visis-backend/visis-app/static/ $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/static/
 
       # Step 4: Copy docker-compose.local.yml to EC2 and Deploy Docker Compose
       - name: Copy Docker Compose File and Deploy Containers
@@ -87,7 +87,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./Testing/visis-backend/visis-app/docker-compose.local.yml $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/docker-compose.yml
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/docker-compose.local.yml $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/docker-compose.yml
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
             cd /home/ubuntu/fastapi_project &&
             docker-compose -f docker-compose.yml down --remove-orphans -v &&
