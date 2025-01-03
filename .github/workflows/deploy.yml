@@ -4,7 +4,7 @@
 #   push:
 #     branches: [ "main" ]
 
-# good jobss:
+# good jobs:
 #   deploy:
 #     runs-on: ubuntu-latest
 #     steps:
