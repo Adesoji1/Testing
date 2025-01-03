@@ -1,9 +1,14 @@
 # app/models/user.py
 
-from sqlalchemy import Column, Integer, String, DateTime,Boolean
+from sqlalchemy import Column, Integer, String, DateTime,Boolean, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
 from app.database import Base
 from datetime import datetime
+from enum import Enum 
+
+class SubscriptionType(str, Enum):
+    free = "free"
+    premium = "premium"
 
 class User(Base):
     __tablename__ = 'users'
@@ -19,6 +24,12 @@ class User(Base):
     refresh_token = Column(String, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     is_admin = Column(Boolean, default=False, nullable=False)
+    subscription_type = Column(
+        SQLAlchemyEnum(SubscriptionType, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        server_default="free"
+    )
+    # subscription_type = Column(Enum(SubscriptionType), default=SubscriptionType.free, nullable=False)
 
     preferences = relationship("UserPreference", back_populates="user")
     documents = relationship("Document", back_populates="user")
@@ -32,3 +43,4 @@ class User(Base):
     subscriptions = relationship("Subscription", back_populates="user")
     # refunds = relationship("Refund",back_populates="user")
     refunds = relationship("Refund", back_populates="user", cascade="all, delete-orphan")
+    

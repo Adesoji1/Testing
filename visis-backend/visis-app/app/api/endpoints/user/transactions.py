@@ -1,8 +1,5 @@
 # app/api/endpoints/user/transactions.py
 
-
-# app/api/endpoints/transactions.py
-
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from typing import List

@@ -2256,3 +2256,2941 @@ Sample Response
   }
 
 }
+
+##### SUBSCRIPTION ####
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 406, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 187, in __call__
+    raise exc
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 165, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 185, in __call__
+    with collapse_excgroups():
+  File "/usr/lib/python3.11/contextlib.py", line 155, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 187, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26fullperfect/Visiszipnov26/app/main.py", line 510, in log_requests
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 163, in call_next
+    raise app_exc
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 149, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 185, in __call__
+    with collapse_excgroups():
+  File "/usr/lib/python3.11/contextlib.py", line 155, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 187, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26fullperfect/Visiszipnov26/app/middleware/ip_whitelist.py", line 79, in validate_ip
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 163, in call_next
+    raise app_exc
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/base.py", line 149, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/routing.py", line 715, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/routing.py", line 735, in app
+    await route.handle(scope, receive, send)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 62, in wrapped_app
+    raise exc
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 51, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/fastapi/routing.py", line 297, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26/venv/lib/python3.11/site-packages/fastapi/routing.py", line 210, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/adesoji/Documents/Visis_revisions/Visiszipnov26fullperfect/Visiszipnov26/app/api/endpoints/payment_callback.py", line 42, in paystack_callback
+    subscription_data = await create_subscription_on_paystack(
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: create_subscription_on_paystack() got an unexpected keyword argument 'customer', also when i am trying to pay via card, i didn't see wheer to input my card details in {
+  "authorization_url": "https://checkout.paystack.com/f4memgp79cvbepe",
+  "access_code": "f4memgp79cvbepe",
+  "reference": "sub_1734723111"
+}, you are still missing out some things, also can we know wah the server at paystack expects, now i have a transaction.py that works well, just take clue from there, don't consfuse it with subscription,  ijust expect you to give me the code that will make everything work, now in the form selection, i want their values to be there exactly, where i select from a drop down that selects either ussd or any other value.  tips from transaction.py and transaction_public.py  # app/api/endpoints/user/transactions.py
+
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
+from sqlalchemy.orm import Session
+from typing import List
+import logging
+
+from app.models.transaction import Transaction
+from app.schemas.transaction import (
+    TransactionInitializeRequest,
+    TransactionInitializeResponse,
+    TransactionResponse,
+    ChargeAuthorizationRequest,
+    PartialDebitRequest,
+)
+from app.services.transaction_service import (
+    initialize_transaction,
+    verify_transaction,
+    list_transactions,
+    fetch_transaction_by_reference,
+    fetch_transaction,
+    charge_authorization,
+    view_transaction_timeline,
+    get_transaction_totals,
+    export_transactions,
+    partial_debit,
+    handle_transaction_webhook,
+)
+from app.api.endpoints.user.auth import get_current_user
+from app.database import get_db
+from app.models.user import User
+from app.utils.paystack_utils import verify_paystack_signature, verify_paystack_transaction
+from fastapi.responses import Response
+from app.utils.email_utils import send_email  # Ensure this utility exists
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(
+    prefix="/transactions",
+    tags=["Transactions"],
+)
+
+@router.post("/initialize", response_model=TransactionInitializeResponse)
+async def initialize_transaction_endpoint(
+    transaction_request: TransactionInitializeRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Initialize a transaction.
+    """
+    try:
+        initialization_response = await initialize_transaction(
+            transaction_request=transaction_request,
+            db=db,
+            current_user=current_user
+        )
+        return initialization_response
+    except Exception as e:
+        logger.error(f"Transaction initialization failed: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/verify/{reference}", response_model=TransactionResponse)
+async def verify_transaction_endpoint(
+    reference: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Verify a transaction using its reference.
+    """
+    try:
+        transaction = await verify_transaction(reference=reference, db=db)
+        if not transaction or transaction.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+        return transaction
+    except Exception as e:
+        logger.error(f"Transaction verification failed: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    
+@router.get("/totals")
+async def get_transaction_totals_endpoint(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get total amount received in transactions for the current user.
+    """
+    try:
+        totals = await get_transaction_totals(db=db, user_id=current_user.id)
+        return totals
+    except Exception as e:
+        logger.error(f"Failed to retrieve transaction totals: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/timeline/{id_or_reference}")
+async def view_transaction_timeline_endpoint(
+    id_or_reference: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    timeline = await view_transaction_timeline(id_or_reference=id_or_reference)
+    if not timeline:
+        # If there's no timeline data, return a 404 or an appropriate message
+        raise HTTPException(status_code=404, detail="No timeline data found for this transaction.")
+    return timeline
+
+
+@router.get("/export")
+async def export_transactions_endpoint(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Export transactions for the current user.
+    """
+    try:
+        export_link = await export_transactions(db=db, user_id=current_user.id)
+        return {"export_link": export_link}
+    except Exception as e:
+        logger.error(f"Failed to export transactions: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+# @router.get("/timeline/{id_or_reference}")
+# async def view_transaction_timeline_endpoint(
+#     id_or_reference: str,
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(get_current_user),
+# ):
+#     """
+#     View the timeline of a transaction.
+#     """
+#     try:
+#         timeline = await view_transaction_timeline(id_or_reference=id_or_reference)
+#         return timeline
+#     except Exception as e:
+#         logger.error(f"Failed to retrieve transaction timeline: {e}")
+#         raise HTTPException(status_code=400, detail=str(e))
+
+@router.get("/", response_model=List[TransactionResponse])
+async def list_transactions_endpoint(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    List all transactions for the current user.
+    """
+    transactions = list_transactions(db=db, user_id=current_user.id)
+    return transactions
+
+
+@router.get("/{transaction_id}", response_model=TransactionResponse)
+async def fetch_transaction_endpoint(
+    transaction_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Retrieve a specific transaction by ID.
+    """
+    transaction = fetch_transaction(db=db, transaction_id=transaction_id)
+    if not transaction or transaction.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return transaction
+
+@router.post("/charge_authorization", response_model=TransactionResponse)
+async def charge_authorization_endpoint(
+    charge_request: ChargeAuthorizationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Charge a customer’s authorization. you cannot reuse a reference that was already used in a previous successful transaction.
+    Regarding the use of references:
+
+    Does Paystack generate references?
+    If you do not provide a reference field, Paystack will generate one for you automatically. This is helpful if you don't want to manage references yourself. Paystack will return the generated reference in the API response.
+
+    What if I need a known reference?
+   If you want a known, trackable reference, you must generate it yourself each time you create or charge a transaction. Each new charge attempt must have a unique reference. If you reuse a reference that was previously associated with a successful transaction, Paystack will return a "Duplicate Transaction Reference" error.
+
+   How do clients handle references for charge_authorization?
+   For ease of use, you have two options:
+
+   Let Paystack generate the reference: Omit the reference field entirely. Paystack will respond with the generated reference in its response. You can store and use it later if needed.
+   Generate your own unique reference each time you call charge_authorization. This can be a random string. It just needs to be unique so Paystack doesn’t consider it a duplicate.
+   In summary:
+
+   Remove the comment from your JSON request.
+   Either omit the reference field and let Paystack create it for you or ensure you generate a unique reference each time you call charge_authorization.
+    """
+    try:
+        transaction = await charge_authorization(
+            charge_request=charge_request,
+            db=db,
+            current_user=current_user
+        )
+        return transaction
+    except Exception as e:
+        logger.error(f"Charge authorization failed: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    
+# @router.get("/timeline/{id_or_reference}")
+# async def view_transaction_timeline_endpoint(
+#     id_or_reference: str,
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(get_current_user),
+# ):
+#     """
+#     View the timeline of a transaction.
+#     """
+#     try:
+#         timeline = await view_transaction_timeline(id_or_reference=id_or_reference)
+#         return timeline
+#     except Exception as e:
+#         logger.error(f"Failed to retrieve transaction timeline: {e}")
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+
+
+# @router.get("/totals")
+# async def get_transaction_totals_endpoint(
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(get_current_user),
+# ):
+#     """
+#     Get total amount received in transactions for the current user.
+#     """
+#     try:
+#         totals = await get_transaction_totals(db=db, user_id=current_user.id)
+#         return totals
+#     except Exception as e:
+#         logger.error(f"Failed to retrieve transaction totals: {e}")
+#         raise HTTPException(status_code=400, detail=str(e))
+
+
+
+
+@router.post("/partial_debit", response_model=TransactionResponse)
+async def partial_debit_endpoint(
+    partial_debit_request: PartialDebitRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Perform a partial debit on a customer's account.
+    """
+    try:
+        transaction = await partial_debit(
+            partial_debit_request=partial_debit_request,
+            db=db,
+            current_user=current_user
+        )
+        return transaction
+    except Exception as e:
+        logger.error(f"Partial debit failed: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/webhook")
+async def paystack_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """
+    Handle Paystack webhook events for transactions.
+    """
+    is_valid = await verify_paystack_signature(request)
+    if not is_valid:
+        logger.warning("Unauthorized webhook attempt.")
+        return Response(status_code=401)
+
+    payload = await request.json()
+    event = payload.get('event')
+    data = payload.get('data')
+
+    if event == 'charge.success':
+        reference = data.get('reference')
+        logger.info(f"Payment successful for reference {reference}")
+
+        success = await handle_transaction_webhook(db=db, reference=reference)
+        if success:
+            # Send thank-you email in background
+            transaction = fetch_transaction_by_reference(db=db, reference=reference)
+            if transaction:
+                email = transaction.customer_email
+                amount = transaction.amount
+                subject = "Thank you for your transaction"
+                body = f"""
+                <p>Dear {email},</p>
+                <p>Thank you for your payment of NGN {amount:.2f}.</p>
+                <p>Your support helps us continue our mission.</p>
+                <p>Best regards,<br>Your Team</p>
+                """
+                background_tasks.add_task(send_email, subject, email, body)
+        else:
+            logger.error(f"Failed to handle webhook for reference {reference}")
+    else:
+        logger.info(f"Unhandled event type: {event}")
+
+    return Response(status_code=200), # app/api/endpoints/transactions_public.py
+
+from fastapi import APIRouter, HTTPException, Request, Depends, BackgroundTasks
+from sqlalchemy.orm import Session
+from fastapi.responses import Response
+import logging
+
+from app.database import get_db
+from app.utils.paystack_utils import verify_paystack_transaction, verify_paystack_signature
+from app.services.transaction_service import fetch_transaction_by_reference
+from app.utils.email_utils import send_email
+
+logger = logging.getLogger(__name__)
+
+public_router = APIRouter(prefix="/transactions", tags=["Transactions-Public"])
+
+@public_router.get("/callback")
+async def paystack_callback(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Handle Paystack callback after payment is completed.
+    Public route: No get_current_user dependency.
+    """
+    reference = request.query_params.get('reference')
+    if not reference:
+        logger.error("Reference not found in callback.")
+        raise HTTPException(status_code=400, detail="Reference not found in callback.")
+
+    # Verify the transaction with Paystack
+    transaction_data = await verify_paystack_transaction(reference)
+    if transaction_data:
+        transaction = fetch_transaction_by_reference(db=db, reference=reference)
+        if transaction:
+            # Update transaction fields
+            transaction.status = transaction_data.get('status')
+            transaction.paid_at = transaction_data.get('paid_at')
+            transaction.channel = transaction_data.get('channel')
+            transaction.transaction_id = transaction_data.get('id')
+            transaction.customer_id = transaction_data['customer']['id']
+            transaction.authorization_code = transaction_data['authorization']['authorization_code']
+            transaction.currency = transaction_data.get('currency')
+            transaction.transaction_metadata = transaction_data.get('metadata')
+            db.commit()
+            return {"message": "Payment successful"}
+        else:
+            logger.error(f"Transaction with reference {reference} not found in database.")
+            raise HTTPException(status_code=404, detail="Transaction not found.")
+    else:
+        logger.error("Payment verification failed.")
+        raise HTTPException(status_code=400, detail="Payment verification failed.")
+ take tips from here with the information below to ensure the subscription works well , also allow for when a user wants to pay subscription via bank transfer.   i am using Nigeria.   Single Transfers
+In a nutshell
+
+Send money to your customers by using the Transfer API
+
+You can transfer money in four easy steps:
+
+    Create a transfer recipient
+    Generate a transfer reference
+    Initiate a transfer
+    Listen for transfer status
+
+Before you begin!
+
+To send money on Paystack, you need API keys to authenticate your transfers. You can find your keys on the Paystack Dashboard under Settings → API Keys & Webhooks.
+Create a transfer recipient
+
+A transfer recipient is a beneficiary on your integration that you can send money to. Before sending money to your customer, you need to collect their details first, then use their details to create a transfer recipient. We support different recipients in different countries:
+Type	Description	Currency
+ghipss	This means Ghana Interbank Payment and Settlement Systems. It represents bank account in Ghana.	GHS
+mobile_money	Mobile Money or MoMo is an account tied to a mobile number.	GHS/KES
+kepss	This is the Kenya Electronic Payment and Settlement System. It represents bank accounts in Kenya.	KES
+nuban	This means the Nigerian Uniform Bank Account Number. It represents bank accounts in Nigeria.	NGN
+basa	This means the Banking Association South Africa. It represents bank accounts in South Africa.	ZAR
+authorization	This is a unique code that represents a customer’s card. We return an authorization code after a user makes a payment with their card.	All
+
+The recipient_code from the data object is the unique identifier for a user and would be used to make transfers to that customer This code should be saved with the customer's records in your database.
+Generate a transfer reference
+
+A transfer reference is a unique identifier that lets you track, manage and reconcile each transfer request made on your integration. Transfer references allow you to prevent double crediting as you can retry a non-conclusive transfer rather than initiate a new request.
+
+In order to take advantage of a transfer reference, you need to generate and provide it for every request. When you don’t provide a transfer reference, Paystack generates one for you but this defeats the purpose of the transfer reference.
+
+We recommend generating a v4 UUID reference of no more than 100 characters. However, if you prefer implementing your own logic, you should ensure your reference contains at least 16 alphanumeric characters.
+
+{
+
+	"source": "balance",
+
+	"reason": "Savings",
+
+	"amount": 30000,
+
+	"reference": "your-unique-reference",
+
+	"recipient": "RCP_1a25w1h3n0xctjg"
+
+}
+
+Initiate a transfer
+
+To send money to a customer, you make a POST request to the Initate TransferAPI, passing the reference and recipient_code previously created.
+Disabling OTP
+
+When building a fully automated system, you might need to disable OTP for transfers. You can disable OTP from the Preferences tab on the Paystack Dashoard. You should uncheck the Confirm transfers before sending checkbox as shown in the image below.
+Image of the disabled OTP state of tranfers
+Show Response
+
+curl https://api.paystack.co/transfer
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-H "Content-Type: application/json"
+
+-d '{ "source": "balance", 
+
+      "amount": "37800",
+
+      "reference": "your-unique-reference", 
+
+      "recipient": "RCP_t0ya41mp35flk40", 
+
+      "reason": "Holiday Flexing" 
+
+    }'
+
+-X POST
+
+
+When you send this request, if there are no errors, the response comes back with a pending status, while the transfer is being processed.
+Retrying a transfer
+
+If there is an error with the transfer request, kindly retry the transaction with the same reference in order to avoid double crediting. If a new reference is used, the transfer would be treated as a new request.
+
+Test transfers always return success, because there is no processing involved. The live transfers processing usually take between a few seconds and a few minutes. When it's done processing, a notification is sent to your webhook URL.
+Verify a transfer
+
+When a transfer is initiated, it could take a few seconds or minutes to be processed. This is why we recommend relying on webhooks for verification as opposed to polling.
+Receiving Notifications
+
+In order to receive notifications, you need to implement a webhook URL and set the webhook URL on your Paystack Dashboard.
+
+Once a transfer is processed, we send the final status of the transfer as a POST request to your webhook URL.
+Event	Description
+transfer.success	This is sent when the transfer is successful
+transfer.failed	This is sent when the transfer fails
+transfer.reversed	This is sent when we refund a previously debited amount for a transfer that couldn’t be completed
+
+    Transfer SuccessfulTransfer FailedTransfer Reversed
+
+{
+
+  "event": "transfer.success",
+
+  "data": {
+
+    "amount": 30000,
+
+    "currency": "NGN",
+
+    "domain": "test",
+
+    "failures": null,
+
+    "id": 37272792,
+
+    "integration": {
+
+      "id": 463433,
+
+      "is_live": true,
+
+      "business_name": "Boom Boom Industries NG"
+
+    },
+
+    "reason": "Have fun...",
+
+    "reference": "1jhbs3ozmen0k7y5efmw",
+
+    "source": "balance",
+
+    "source_details": null,
+
+    "status": "success",
+
+    "titan_code": null,
+
+    "transfer_code": "TRF_wpl1dem4967avzm",
+
+    "transferred_at": null,
+
+    "recipient": {
+
+      "active": true,
+
+      "currency": "NGN",
+
+      "description": "",
+
+      "domain": "test",
+
+      "email": null,
+
+      "id": 8690817,
+
+      "integration": 463433,
+
+      "metadata": null,
+
+      "name": "Jack Sparrow",
+
+      "recipient_code": "RCP_a8wkxiychzdzfgs",
+
+      "type": "nuban",
+
+      "is_deleted": false,
+
+      "details": {
+
+        "account_number": "0000000000",
+
+        "account_name": null,
+
+        "bank_code": "011",
+
+        "bank_name": "First Bank of Nigeria"
+
+      },
+
+      "created_at": "2020-09-03T12:11:25.000Z",
+
+      "updated_at": "2020-09-03T12:11:25.000Z"
+
+    },
+
+    "session": {
+
+      "provider": null,
+
+      "id": null
+
+    },
+
+    "created_at": "2020-10-26T12:28:57.000Z",
+
+    "updated_at": "2020-10-26T12:28:57.000Z"
+
+  },     SuccessfulTransfer FailedTransfer Reversed
+
+{
+
+  "event": "transfer.failed",
+
+  "data": {
+
+    "amount": 200000,
+
+    "currency": "NGN",
+
+    "domain": "test",
+
+    "failures": null,
+
+    "id": 69123462,
+
+    "integration": {
+
+      "id": 100043,
+
+      "is_live": true,
+
+      "business_name": "Paystack"
+
+    },
+
+    "reason": "Enjoy",
+
+    "reference": "1976435206",
+
+    "source": "balance",
+
+    "source_details": null,
+
+    "status": "failed",
+
+    "titan_code": null,
+
+    "transfer_code": "TRF_chs98y5rykjb47w",
+
+    "transferred_at": null,
+
+    "recipient": {
+
+      "active": true,
+
+      "currency": "NGN",
+
+      "description": null,
+
+      "domain": "test",
+
+      "email": "test@email.com",
+
+      "id": 13584206,
+
+      "integration": 100043,
+
+      "metadata": null,
+
+      "name": "Ted Lasso",
+
+      "recipient_code": "RCP_cjcua8itre45gs",
+
+      "type": "nuban",
+
+      "is_deleted": false,
+
+      "details": {
+
+        "authorization_code": null,
+
+        "account_number": "0123456789",
+
+        "account_name": "Ted Lasso",
+
+        "bank_code": "011",
+
+        "bank_name": "First Bank of Nigeria"
+
+      },
+
+      "created_at": "2021-04-12T15:30:14.000Z",
+
+      "updated_at": "2021-04-12T15:30:14.000Z"
+
+    },
+
+    "session": {
+
+      "provider": "nip",
+
+      "id": "74849400998877667"
+
+    },
+
+    "created_at": "2021-04-12T15:30:15.000Z",
+
+    "updated_at": "2021-04-12T15:41:21.000Z"
+
+  }
+
+}, {
+
+  "event": "transfer.reversed",
+
+  "data": {
+
+    "amount": 10000,
+
+    "currency": "NGN",
+
+    "domain": "live",
+
+    "failures": null,
+
+    "id": 20615868,
+
+    "integration": {
+
+      "id": 100073,
+
+      "is_live": true,
+
+      "business_name": "Night's Watch Inc"
+
+    },
+
+    "reason": "test balance ledger elastic changes",
+
+    "reference": "jvrjckwenm",
+
+    "source": "balance",
+
+    "source_details": null,
+
+    "status": "reversed",
+
+    "titan_code": null,
+
+    "transfer_code": "TRF_js075pj9u07f34l",
+
+    "transferred_at": "2020-03-24T07:14:00.000Z",
+
+    "recipient": {
+
+      "active": true,
+
+      "currency": "NGN",
+
+      "description": null,
+
+      "domain": "live",
+
+      "email": "jon@sn.ow",
+
+      "id": 1476759,
+
+      "integration": 100073,
+
+      "metadata": null,
+
+      "name": "JON SNOW",
+
+      "recipient_code": "RCP_hmcj8ciho490bvi",
+
+      "type": "nuban",
+
+      "is_deleted": false,
+
+      "details": {
+
+        "authorization_code": null,
+
+        "account_number": "0000000000",
+
+        "account_name": null,
+
+        "bank_code": "011",
+
+        "bank_name": "First Bank of Nigeria"
+
+      },
+
+      "created_at": "2019-04-10T08:39:10.000Z",
+
+      "updated_at": "2019-11-27T20:43:57.000Z"
+
+    },
+
+    "session": {
+
+      "provider": "nip",
+
+      "id": "110006200324071331002061586801"
+
+    },
+
+    "created_at": "2020-03-24T07:13:31.000Z",
+
+    "updated_at": "2020-03-24T07:14:55.000Z"
+
+  }
+
+}, also we need to verify and validate account number for the subscription. Verify Account Number
+In a nutshell
+
+The account validation APIs allow merchants to confirm the authenticity of a customer’s account number before sending money to the customer.
+Introduction
+
+Before sending money to a customer, you need to ensure the customer’s account details are correct. This is to ensure you aren’t sending money to the wrong person. In order to achieve this, we provide the following APIs:
+Name	Availability	Description
+Resolve Account Number	Nigeria, Ghana	Used for the confirmation of personal bank accounts
+Account Validation	South Africa	Used for the validation of personal and business bank accounts
+
+Account number verification allows you to:
+
+    Confirm a customer’s bank details before creating a transfer recipient
+    Automate your KYC process
+
+Resolve Account Number
+Gentle reminder
+
+This feature is available to business in Nigeria and Ghana.
+
+The Resolve Account NumberAPI takes the customer’s account number and bank code and returns the account details of the customer. To resolve an account number, make a GET request to the /bank/resolve endpoint:
+Hide Response
+
+curl https://api.paystack.co/bank/resolve?account_number=0001234567&bank_code=058
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-X GET
+
+{
+
+  "status": true,
+
+  "message": "Account number resolved",
+
+  "data": {
+
+    "account_number": "0001234567",
+
+    "account_name": "Doe Jane Loren",
+
+    "bank_id": 9
+
+  }
+
+}
+
+Pricing
+
+This endpoint is free for use.
+Account Validation
+Gentle Reminder
+
+This feature is only available to businesses in South Africa.
+
+The Validate AccountAPI allows merchant validate both personal and business accounts. It checks if the provided customer’s details are correct and returns the status of the check. However, not all banks support account verification, so you need to confirm if the customer's bank supports it.
+Fetch supported banks
+
+To confirm the banks that supports account validation, make a request to the List BankAPI endpoint, passing the enabled_for_verification query parameter:
+Hide Response
+
+curl https://api.paystack.co/bank?currency=ZAR&enabled_for_verification=true
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-X GET
+
+{
+
+  "status": true,
+
+  "message": "Banks retrieved",
+
+  "data": [
+
+    {
+
+      "id": 140,
+
+      "name": "Absa Bank Limited, South Africa",
+
+      "slug": "absa-za",
+
+      "code": "632005",
+
+      "longcode": "632005",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "business",
+
+        "personal"
+
+      ]
+
+    },
+
+    {
+
+      "id": 141,
+
+      "name": "African Bank Limited",
+
+      "slug": "african-bank-za",
+
+      "code": "430000",
+
+      "longcode": "430000",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "business",
+
+        "personal"
+
+      ]
+
+    },
+
+    {
+
+      "id": 146,
+
+      "name": "Capitec Bank Limited",
+
+      "slug": "capitec-bank-za",
+
+      "code": "470010",
+
+      "longcode": "470010",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "personal"
+
+      ]
+
+    },
+
+    {
+
+      "id": 147,
+
+      "name": "Discovery Bank Limited",
+
+      "slug": "discovery-bank-za",
+
+      "code": "679000",
+
+      "longcode": "679000",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "business",
+
+        "personal"
+
+      ]
+
+    },
+
+    {
+
+      "id": 151,
+
+      "name": "First National Bank",
+
+      "slug": "first-national-bank-za",
+
+      "code": "250655",
+
+      "longcode": "250655",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "business",
+
+        "personal"
+
+      ]
+
+    },
+
+    {
+
+      "id": 152,
+
+      "name": "Grindrod Bank",
+
+      "slug": "grindrod-bank-za",
+
+      "code": "584000",
+
+      "longcode": "584000",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "business",
+
+        "personal"
+
+      ]
+
+    },
+
+    {
+
+      "id": 153,
+
+      "name": "Investec Bank Ltd",
+
+      "slug": "investec-bank-za",
+
+      "code": "580105",
+
+      "longcode": "580105",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "business",
+
+        "personal"
+
+      ]
+
+    },
+
+    {
+
+      "id": 157,
+
+      "name": "Nedbank",
+
+      "slug": "nedbank-za",
+
+      "code": "198765",
+
+      "longcode": "198765",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "business",
+
+        "personal"
+
+      ]
+
+    },
+
+    {
+
+      "id": 161,
+
+      "name": "SASFIN Bank",
+
+      "slug": "sasfin-bank-za",
+
+      "code": "683000",
+
+      "longcode": "683000",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "business",
+
+        "personal"
+
+      ]
+
+    },
+
+    {
+
+      "id": 163,
+
+      "name": "Standard Bank South Africa",
+
+      "slug": "standard-bank-za",
+
+      "code": "051001",
+
+      "longcode": "051001",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "business",
+
+        "personal"
+
+      ]
+
+    },
+
+    {
+
+      "id": 165,
+
+      "name": "TymeBank",
+
+      "slug": "tymebank-za",
+
+      "code": "678910",
+
+      "longcode": "678910",
+
+      "gateway": null,
+
+      "pay_with_bank": false,
+
+      "active": true,
+
+      "country": "South Africa",
+
+      "currency": "ZAR",
+
+      "type": "basa",
+
+      "is_deleted": false,
+
+      "createdAt": "2020-09-04T10:38:56.000Z",
+
+      "updatedAt": null,
+
+      "supported_types": [
+
+        "business",
+
+        "personal"
+
+      ]
+
+    }
+
+  ]
+
+}
+
+The data object in the response contains the banks that support account validation. The supported_types in each bank object contains an array of the account type that can be validated. Some banks only support personal accounts while others support both personal and business accounts. If the customer's bank is returned in this response, then you can go ahead with account validation, else, the account validation can be skipped.
+Validate account
+
+To validate an account, make a POST request to the /bank/validate endpoint:
+Show Response
+
+curl https://api.paystack.co/bank/validate
+
+-H "Authorization: Bearer YOUR_SECRET_KEY"
+
+-H "Content-Type: application/json"
+
+-d '{ 
+
+      "bank_code": "632005",
+
+      "country_code": "ZA",
+
+      "account_number": "0123456789",
+
+      "account_name": "Ann Bron",
+
+      "account_type": "personal",
+
+      "document_type": "identityNumber",
+
+      "document_number": "1234567890123"
+
+    }'
+
+-X POST
+
+The /bank/validate endpoint can be used for both personal and business account validation by using the following request parameters:
+Name	Type	Description
+account_name	String	Customer's first and last name registered with their bank
+account_number	String	Customer’s account number
+account_type	String	This can take one of: [personal, business]
+bank_code	String	The bank code of the customer’s bank. You can fetch the bank codes by using our List BankAPI.
+country_code	String	The two digit ISO code of the customer’s bank
+document_type	String	Customer’s mode of identity. This could be one of: [identityNumber, passportNumber, businessRegistrationNumber]
+document_number	String	Customer’s mode of identity number
+
+When validating a personal account number, the customer can either provide their passport or identity number. You can specify the mode of identity by passing either identityNumber or passportNumber as the document_type parameter.
+
+For business account validation the document_type should be businessRegistrationNumber. Initiate Transfer
+
+Send money to your customers.
+
+Status of transfer object returned will be pending if OTP is disabled. In the event that an OTP is required, status will read otp.
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+content-type
+String
+	Set value to application/json
+Body Parameters
+source
+String
+	Where should we transfer from? Only balance for now
+amount
+Integer
+	Amount to transfer in kobo if currency is NGN and pesewas if currency is GHS.
+recipient
+String
+	Code for transfer recipient
+reason
+String
+	
+The reason for the transfer
+currency
+String
+	
+Specify the currency of the transfer. Defaults to NGN
+account_reference
+String
+	
+A unique identifier required in Kenya for MPESA Paybill and Till transfers
+reference
+String
+	
+If specified, the field should be a unique identifier (in lowercase) for the object. Only -,_ and alphanumeric characters allowed.
+Hide optional parameters
+POST/transfer
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/transfer"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+content_type="Content-Type: application/json"
+
+data='{ 
+
+  "source": "balance", 
+
+  "reason": "Calm down", 
+
+  "amount":3794800, 
+
+  "recipient": "RCP_gx2wn530m0i3w3m"
+
+}'
+
+
+curl "$url" -H "$authorization" -H "$content_type" -d "$data" -X POST
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Transfer requires OTP to continue",
+
+  "data": {
+
+    "integration": 100073,
+
+    "domain": "test",
+
+    "amount": 3794800,
+
+    "currency": "NGN",
+
+    "source": "balance",
+
+    "reason": "Calm down",
+
+    "recipient": 28,
+
+    "status": "otp",
+
+    "transfer_code": "TRF_1ptvuv321ahaa7q",
+
+    "id": 14,
+
+    "createdAt": "2017-02-03T17:21:54.508Z",
+
+    "updatedAt": "2017-02-03T17:21:54.508Z"
+
+  }
+
+}
+
+Finalize Transfer
+
+Finalize an initiated transfer
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+content-type
+String
+	Set value to application/json
+Body Parameters
+transfer_code
+String
+	The transfer code you want to finalize
+otp
+String
+	OTP sent to business phone to verify transfer
+POST/transfer/finalize_transfer
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/transfer/finalize_transfer"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+content_type="Content-Type: application/json"
+
+data='{ 
+
+  "transfer_code": "TRF_vsyqdmlzble3uii", 
+
+  "otp": "928783"
+
+}'
+
+
+curl "$url" -H "$authorization" -H "$content_type" -d "$data" -X POST
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Transfer has been queued",
+
+  "data": {
+
+    "domain": "test",
+
+    "amount": 1000000,
+
+    "currency": "NGN",
+
+    "reference": "n7ll9pzl6b",
+
+    "source": "balance",
+
+    "source_details": null,
+
+    "reason": "E go better for you",
+
+    "status": "success",
+
+    "failures": null,
+
+    "transfer_code": "TRF_zuirlnr9qblgfko",
+
+    "titan_code": null,
+
+    "transferred_at": null,
+
+    "id": 529410,
+
+    "integration": 123460,
+
+    "recipient": 225204,
+
+    "createdAt": "2018-08-02T10:02:55.000Z",
+
+    "updatedAt": "2018-08-02T10:12:05.000Z"
+
+  }
+
+}
+
+Initiate Bulk Transfer
+
+Batch multiple transfers in a single request.
+
+You need to disable the Transfers OTP requirement to use this endpoint.
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+content-type
+String
+	Set value to application/json
+Body Parameters
+source
+String
+	Where should we transfer from? Only balance for now
+transfers
+Array
+	A list of transfer object. Each object should contain amount, recipient, and reference
+POST/transfer/bulk
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/transfer/bulk"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+content_type="Content-Type: application/json"
+
+data='{ 
+
+  "currency": "NGN",
+
+  "source": "balance",
+
+  "transfers": [
+
+    {
+
+      "amount": 20000,
+
+      "reference": "588YtfftReF355894J",
+
+      "reason": "Why not?",
+
+      "recipient": "RCP_2tn9clt23s7qr28"
+
+    },
+
+    {
+
+      "amount": 30000,
+
+      "reference": "YunoTReF35e0r4J",
+
+      "reason": "Because I can",
+
+      "recipient": "RCP_1a25w1h3n0xctjg"
+
+    },
+
+    {
+
+      "amount": 40000,
+
+      "reason": "Coming right up",
+
+      "recipient": "RCP_aps2aibr69caua7"
+
+    }
+
+  ]
+
+}'
+
+
+curl "$url" -H "$authorization" -H "$content_type" -d "$data" -X POST
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "3 transfers queued.",
+
+  "data": [
+
+    {
+
+      "reference": "588YtfftReF355894J",
+
+      "recipient": "RCP_2tn9clt23s7qr28",
+
+      "amount": 20000,
+
+      "transfer_code": "TRF_ful4rvpbiuaph4fo",
+
+      "currency": "NGN",
+
+      "status": "received"
+
+    },
+
+    {
+
+      "reference": "YunoTReF35e0r4J",
+
+      "recipient": "RCP_1a25w1h3n0xctjg",
+
+      "amount": 30000,
+
+      "transfer_code": "TRF_0lztrf3rox1rpbw1",
+
+      "currency": "NGN",
+
+      "status": "received"
+
+    },
+
+    {
+
+      "reference": "nm7kjk9gb-l5i4lr9wq3",
+
+      "recipient": "RCP_aps2aibr69caua7",
+
+      "amount": 40000,
+
+      "transfer_code": "TRF_hsk59k6loek7vlut",
+
+      "currency": "NGN",
+
+      "status": "received"
+
+    }
+
+  ]
+
+}
+
+List Transfers
+
+List the transfers made on your integration.
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+Query Parameters
+perPage
+Integer
+	Specify how many records you want to retrieve per page. If not specify we use a default value of 50.
+page
+Integer
+	Specify exactly what transfer you want to page. If not specify we use a default value of 1.
+recipient
+Integer
+	Filter by the recipient ID
+from
+Datetime
+	
+A timestamp from which to start listing transfer e.g. 2016-09-24T00:00:05.000Z, 2016-09-21
+to
+Datetime
+	
+A timestamp at which to stop listing transfer e.g. 2016-09-24T00:00:05.000Z, 2016-09-21
+Show optional parameters
+GET/transfer
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/transfer"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+
+curl "$url" -H "$authorization" -X GET
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Transfers retrieved",
+
+  "data": [
+
+    {
+
+      "integration": 100073,
+
+      "recipient": {
+
+        "domain": "test",
+
+        "type": "nuban",
+
+        "currency": "NGN",
+
+        "name": "Flesh",
+
+        "details": {
+
+          "account_number": "olounje",
+
+          "account_name": null,
+
+          "bank_code": "044",
+
+          "bank_name": "Access Bank"
+
+        },
+
+        "description": "Eater",
+
+        "metadata": null,
+
+        "recipient_code": "RCP_2x5j67tnnw1t98k",
+
+        "active": true,
+
+        "id": 28,
+
+        "integration": 100073,
+
+        "createdAt": "2017-02-02T19:39:04.000Z",
+
+        "updatedAt": "2017-02-02T19:39:04.000Z"
+
+      },
+
+      "domain": "test",
+
+      "amount": 4400,
+
+      "currency": "NGN",
+
+      "source": "balance",
+
+      "source_details": null,
+
+      "reason": "Eater",
+
+      "status": "otp",
+
+      "failures": null,
+
+      "transfer_code": "TRF_1ptvuv321ahaa7q",
+
+      "id": 14,
+
+      "createdAt": "2017-02-03T17:21:54.000Z",
+
+      "updatedAt": "2017-02-03T17:21:54.000Z"
+
+    },
+
+    {
+
+      "integration": 100073,
+
+      "recipient": {
+
+        "domain": "test",
+
+        "type": "nuban",
+
+        "currency": "USD",
+
+        "name": "FleshUSD",
+
+        "details": {
+
+          "account_number": "1111111111",
+
+          "account_name": null,
+
+          "bank_code": "044",
+
+          "bank_name": "Access Bank"
+
+        },
+
+        "description": "EaterUSD",
+
+        "metadata": null,
+
+        "recipient_code": "RCP_bi84k5gguakuqmg",
+
+        "active": true,
+
+        "id": 22,
+
+        "integration": 100073,
+
+        "createdAt": "2017-01-23T16:52:48.000Z",
+
+        "updatedAt": "2017-01-23T16:52:48.000Z"
+
+      },
+
+      "domain": "test",
+
+      "amount": 3300,
+
+      "currency": "NGN",
+
+      "source": "balance",
+
+      "source_details": null,
+
+      "reason": "I love you",
+
+      "status": "otp",
+
+      "failures": null,
+
+      "transfer_code": "TRF_5pr8ypzb0htx0cn",
+
+      "id": 13,
+
+      "createdAt": "2017-01-23T16:55:59.000Z",
+
+      "updatedAt": "2017-01-23T16:55:59.000Z"
+
+    }
+
+  ],
+
+  "meta": {
+
+    "total": 2,
+
+    "skipped": 0,
+
+    "perPage": 50,
+
+    "page": 1,
+
+    "pageCount": 1
+
+  }
+
+}
+
+Fetch Transfer
+
+Get details of a transfer on your integration.
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+Path Parameters
+id_or_code
+String
+	The transfer ID or code you want to fetch
+GET/transfer/:id_or_code
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/transfer/{id_or_code}"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+
+curl "$url" -H "$authorization" -X GET
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Transfer retrieved",
+
+  "data": {
+
+    "amount": 20000,
+
+    "createdAt": "2024-02-01T08:32:21.000Z",
+
+    "currency": "NGN",
+
+    "domain": "test",
+
+    "failures": null,
+
+    "id": 451930323,
+
+    "integration": 463433,
+
+    "reason": "Life go better for you",
+
+    "reference": "ge-bzrf8u8k2pygxrnqf",
+
+    "source": "balance",
+
+    "source_details": null,
+
+    "status": "success",
+
+    "titan_code": null,
+
+    "transfer_code": "TRF_fpmd0l8uta8upow7",
+
+    "request": 502643104,
+
+    "transferred_at": null,
+
+    "updatedAt": "2024-02-01T08:34:07.000Z",
+
+    "recipient": {
+
+      "active": true,
+
+      "createdAt": "2021-10-21T11:08:04.000Z",
+
+      "currency": "NGN",
+
+      "description": null,
+
+      "domain": "test",
+
+      "email": "jake@jill.com",
+
+      "id": 19643784,
+
+      "integration": 463433,
+
+      "metadata": {
+
+        "custom_fields": [
+
+          {
+
+            "display_name": "Branch Name",
+
+            "variable_name": "branchName",
+
+            "value": "funny place, Alabama"
+
+          },
+
+          {
+
+            "display_name": "Branch ID",
+
+            "variable_name": "branchID",
+
+            "value": "123"
+
+          }
+
+        ]
+
+      },
+
+      "name": "Abbey Baker",
+
+      "recipient_code": "RCP_rjs1szi4ax5hoeo",
+
+      "type": "nuban",
+
+      "updatedAt": "2023-03-29T08:39:39.000Z",
+
+      "is_deleted": false,
+
+      "isDeleted": false,
+
+      "details": {
+
+        "authorization_code": null,
+
+        "account_number": "0123456789",
+
+        "account_name": "Abbey Baker",
+
+        "bank_code": "058",
+
+        "bank_name": "Guaranty Trust Bank"
+
+      }
+
+    },
+
+    "session": {
+
+      "provider": null,
+
+      "id": null
+
+    },
+
+    "fee_charged": 0,
+
+    "fees_breakdown": null,
+
+    "gateway_response": null
+
+  }
+
+}
+
+Verify Transfer
+
+Verify the status of a transfer on your integration.
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+Path Parameters
+reference
+String
+	Transfer reference
+GET/transfer/verify/:reference
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/transfer/verify/{reference}"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+
+curl "$url" -H "$authorization" -X GET
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Transfer retrieved",
+
+  "data": {
+
+    "amount": 20000,
+
+    "createdAt": "2024-02-01T08:32:21.000Z",
+
+    "currency": "NGN",
+
+    "domain": "test",
+
+    "failures": null,
+
+    "id": 451930323,
+
+    "integration": 463433,
+
+    "reason": "Life go better for you",
+
+    "reference": "ge-bzrf8u8k2pygxrnqf",
+
+    "source": "balance",
+
+    "source_details": null,
+
+    "status": "success",
+
+    "titan_code": null,
+
+    "transfer_code": "TRF_fpmd0l8uta8upow7",
+
+    "request": 502643104,
+
+    "transferred_at": null,
+
+    "updatedAt": "2024-02-01T08:34:07.000Z",
+
+    "recipient": {
+
+      "active": true,
+
+      "createdAt": "2021-10-21T11:08:04.000Z",
+
+      "currency": "NGN",
+
+      "description": null,
+
+      "domain": "test",
+
+      "email": "jake@jill.com",
+
+      "id": 19643784,
+
+      "integration": 463433,
+
+      "metadata": {
+
+        "custom_fields": [
+
+          {
+
+            "display_name": "Branch Name",
+
+            "variable_name": "branchName",
+
+            "value": "funny place, Alabama"
+
+          },
+
+          {
+
+            "display_name": "Branch ID",
+
+            "variable_name": "branchID",
+
+            "value": "123"
+
+          }
+
+        ]
+
+      },
+
+      "name": "Abbey Baker",
+
+      "recipient_code": "RCP_rjs1szi4ax5hoeo",
+
+      "type": "nuban",
+
+      "updatedAt": "2023-03-29T08:39:39.000Z",
+
+      "is_deleted": false,
+
+      "isDeleted": false,
+
+      "details": {
+
+        "authorization_code": null,
+
+        "account_number": "0123456789",
+
+        "account_name": "Abbey Baker",
+
+        "bank_code": "058",
+
+        "bank_name": "Guaranty Trust Bank"
+
+      }
+
+    },
+
+    "session": {
+
+      "provider": null,
+
+      "id": null
+
+    },
+
+    "fee_charged": 0,
+
+    "fees_breakdown": null,
+
+    "gateway_response": null
+
+  }
+
+}, Subscriptions
+
+The Subscriptions API allows you create and manage recurring payment on your integration.
+Create Subscription
+
+Create a subscription on your integration
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+content-type
+String
+	Set value to application/json
+Body Parameters
+customer
+String
+	Customer's email address or customer code
+plan
+String
+	Plan code
+authorization
+String
+	If customer has multiple authorizations, you can set the desired authorization you wish to use for this subscription here. If this is not supplied, the customer's most recent authorization would be used
+start_date
+String
+	
+Set the date for the first debit. (ISO 8601 format) e.g. 2017-05-16T00:30:13+01:00
+Hide optional parameters
+POST/subscription
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/subscription"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+content_type="Content-Type: application/json"
+
+data='{ 
+
+  "customer": "CUS_xnxdt6s1zg1f4nx", 
+
+  "plan": "PLN_gx2wn530m0i3w3m"
+
+}'
+
+
+curl "$url" -H "$authorization" -H "$content_type" -d "$data" -X POST
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Subscription successfully created",
+
+  "data": {
+
+    "customer": 1173,
+
+    "plan": 28,
+
+    "integration": 100032,
+
+    "domain": "test",
+
+    "start": 1459296064,
+
+    "status": "active",
+
+    "quantity": 1,
+
+    "amount": 50000,
+
+    "authorization": {
+
+      "authorization_code": "AUTH_6tmt288t0o",
+
+      "bin": "408408",
+
+      "last4": "4081",
+
+      "exp_month": "12",
+
+      "exp_year": "2020",
+
+      "channel": "card",
+
+      "card_type": "visa visa",
+
+      "bank": "TEST BANK",
+
+      "country_code": "NG",
+
+      "brand": "visa",
+
+      "reusable": true,
+
+      "signature": "SIG_uSYN4fv1adlAuoij8QXh",
+
+      "account_name": "BoJack Horseman"
+
+    },
+
+    "subscription_code": "SUB_vsyqdmlzble3uii",
+
+    "email_token": "d7gofp6yppn3qz7",
+
+    "id": 9,
+
+    "createdAt": "2016-03-30T00:01:04.687Z",
+
+    "updatedAt": "2016-03-30T00:01:04.687Z"
+
+  }
+
+}
+
+List Subscriptions
+
+List subscriptions available on your integration
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+Query Parameters
+perPage
+Integer
+	Specify how many records you want to retrieve per page. If not specify we use a default value of 50.
+page
+Integer
+	Specify exactly what page you want to retrieve. If not specify we use a default value of 1.
+customer
+Integer
+	
+Filter by Customer ID
+plan
+Integer
+	
+Filter by Plan ID
+Hide optional parameters
+GET/subscription
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/subscription"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+
+curl "$url" -H "$authorization" -X GET
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Subscriptions retrieved",
+
+  "data": [
+
+    {
+
+      "customer": {
+
+        "first_name": "BoJack",
+
+        "last_name": "Horseman",
+
+        "email": "bojack@horseman.com",
+
+        "phone": "",
+
+        "metadata": null,
+
+        "domain": "test",
+
+        "customer_code": "CUS_hdhye17yj8qd2tx",
+
+        "risk_action": "default",
+
+        "id": 84312,
+
+        "integration": 100073,
+
+        "createdAt": "2016-10-01T10:59:52.000Z",
+
+        "updatedAt": "2016-10-01T10:59:52.000Z"
+
+      },
+
+      "plan": {
+
+        "domain": "test",
+
+        "name": "Weekly small chops",
+
+        "plan_code": "PLN_0as2m9n02cl0kp6",
+
+        "description": "Small chops delivered every week",
+
+        "amount": 27000,
+
+        "interval": "weekly",
+
+        "send_invoices": true,
+
+        "send_sms": true,
+
+        "hosted_page": false,
+
+        "hosted_page_url": null,
+
+        "hosted_page_summary": null,
+
+        "currency": "NGN",
+
+        "migrate": null,
+
+        "id": 1716,
+
+        "integration": 100073,
+
+        "createdAt": "2016-10-01T10:59:11.000Z",
+
+        "updatedAt": "2016-10-01T10:59:11.000Z"
+
+      },
+
+      "integration": 123456,
+
+      "authorization": {
+
+        "authorization_code": "AUTH_6tmt288t0o",
+
+        "bin": "408408",
+
+        "last4": "4081",
+
+        "exp_month": "12",
+
+        "exp_year": "2020",
+
+        "channel": "card",
+
+        "card_type": "visa visa",
+
+        "bank": "TEST BANK",
+
+        "country_code": "NG",
+
+        "brand": "visa",
+
+        "reusable": true,
+
+        "signature": "SIG_uSYN4fv1adlAuoij8QXh",
+
+        "account_name": "BoJack Horseman"
+
+      },
+
+      "domain": "test",
+
+      "start": 1475319599,
+
+      "status": "active",
+
+      "quantity": 1,
+
+      "amount": 27000,
+
+      "subscription_code": "SUB_6phdx225bavuwtb",
+
+      "email_token": "ore84lyuwcv2esu",
+
+      "easy_cron_id": "275226",
+
+      "cron_expression": "0 0 * * 6",
+
+      "next_payment_date": "2016-10-15T00:00:00.000Z",
+
+      "open_invoice": "INV_qc875pkxpxuyodf",
+
+      "id": 4192,
+
+      "createdAt": "2016-10-01T10:59:59.000Z",
+
+      "updatedAt": "2016-10-12T07:45:14.000Z"
+
+    }
+
+  ],
+
+  "meta": {
+
+    "total": 1,
+
+    "skipped": 0,
+
+    "perPage": 50,
+
+    "page": 1,
+
+    "pageCount": 1
+
+  }
+
+}
+
+Fetch Subscription
+
+Get details of a subscription on your integration
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+Path Parameters
+id_or_code
+String
+	The subscription ID or code you want to fetch
+GET/subscription/:id_or_code
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/subscription/{id_or_code}"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+
+curl "$url" -H "$authorization" -X GET
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Subscription retrieved successfully",
+
+  "data": {
+
+    "invoices": [],
+
+    "customer": {
+
+      "first_name": "BoJack",
+
+      "last_name": "Horseman",
+
+      "email": "bojack@horsinaround.com",
+
+      "phone": null,
+
+      "metadata": {
+
+        "photos": [
+
+          {
+
+            "type": "twitter",
+
+            "typeId": "twitter",
+
+            "typeName": "Twitter",
+
+            "url": "https://d2ojpxxtu63wzl.cloudfront.net/static/61b1a0a1d4dda2c9fe9e165fed07f812_a722ae7148870cc2e33465d1807dfdc6efca33ad2c4e1f8943a79eead3c21311",
+
+            "isPrimary": false
+
+          }
+
+        ]
+
+      },
+
+      "domain": "test",
+
+      "customer_code": "CUS_xnxdt6s1zg1f4nx",
+
+      "id": 1173,
+
+      "integration": 100032,
+
+      "createdAt": "2016-03-29T20:03:09.000Z",
+
+      "updatedAt": "2016-03-29T20:53:05.000Z"
+
+    },
+
+    "plan": {
+
+      "domain": "test",
+
+      "name": "Monthly retainer (renamed)",
+
+      "plan_code": "PLN_gx2wn530m0i3w3m",
+
+      "description": null,
+
+      "amount": 50000,
+
+      "interval": "monthly",
+
+      "send_invoices": true,
+
+      "send_sms": true,
+
+      "hosted_page": false,
+
+      "hosted_page_url": null,
+
+      "hosted_page_summary": null,
+
+      "currency": "NGN",
+
+      "id": 28,
+
+      "integration": 100032,
+
+      "createdAt": "2016-03-29T22:42:50.000Z",
+
+      "updatedAt": "2016-03-29T23:51:41.000Z"
+
+    },
+
+    "integration": 100032,
+
+    "authorization": {
+
+      "authorization_code": "AUTH_6tmt288t0o",
+
+      "bin": "408408",
+
+      "last4": "4081",
+
+      "exp_month": "12",
+
+      "exp_year": "2020",
+
+      "channel": "card",
+
+      "card_type": "visa visa",
+
+      "bank": "TEST BANK",
+
+      "country_code": "NG",
+
+      "brand": "visa",
+
+      "reusable": true,
+
+      "signature": "SIG_uSYN4fv1adlAuoij8QXh",
+
+      "account_name": "BoJack Horseman"
+
+    },
+
+    "domain": "test",
+
+    "start": 1459296064,
+
+    "status": "active",
+
+    "quantity": 1,
+
+    "amount": 50000,
+
+    "subscription_code": "SUB_vsyqdmlzble3uii",
+
+    "email_token": "d7gofp6yppn3qz7",
+
+    "easy_cron_id": null,
+
+    "cron_expression": "0 0 28 * *",
+
+    "next_payment_date": "2016-04-28T07:00:00.000Z",
+
+    "open_invoice": null,
+
+    "id": 9,
+
+    "createdAt": "2016-03-30T00:01:04.000Z",
+
+    "updatedAt": "2016-03-30T00:22:58.000Z"
+
+  }
+
+}
+
+Enable Subscription
+
+Enable a subscription on your integration
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+content-type
+String
+	Set value to application/json
+Body Parameters
+code
+String
+	Subscription code
+token
+String
+	Email token
+POST/subscription/enable
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/subscription/enable"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+content_type="Content-Type: application/json"
+
+data='{ 
+
+  "code": "SUB_vsyqdmlzble3uii", 
+
+  "token": "d7gofp6yppn3qz7"
+
+}'
+
+
+curl "$url" -H "$authorization" -H "$content_type" -d "$data" -X POST
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Subscription enabled successfully"
+
+}
+
+Disable Subscription
+
+Disable a subscription on your integration
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+content-type
+String
+	Set value to application/json
+Body Parameters
+code
+String
+	Subscription code
+token
+String
+	Email token
+POST/subscription/disable
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/subscription/disable"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+content_type="Content-Type: application/json"
+
+data='{ 
+
+  "code": "SUB_vsyqdmlzble3uii", 
+
+  "token": "d7gofp6yppn3qz7" 
+
+}'
+
+
+curl "$url" -H "$authorization" -H "$content_type" -d "$data" -X POST
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Subscription disabled successfully"
+
+}
+
+Generate Update Subscription Link
+
+Generate a link for updating the card on a subscription
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+Path Parameters
+code
+String
+	Subscription code
+GET/subscription/:code/manage/link/
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/subscription/{code}/manage/link"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+
+curl "$url" -H "$authorization" -X GET
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Link generated",
+
+  "data": {
+
+    "link": "https://paystack.com/manage/subscriptions/qlgwhpyq1ts9nsw?subscription_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWJzY3JpcHRpb25fY29kZSI6IlNVQl9xbGd3aHB5cTB0czluc3ciLCJpbnRlZ3JhdGlvbiI6MzUzNTE0LCJkb21haW4iOiJ0ZXN0IiwiZW1haWxfdG9rZW4iOiJzNXIwZjA0ODdwcnNtZWsiLCJpYXQiOjE2MzUyNTkxMzEsIm5iZiI6MTYzNTI1OTEzcjeR82XhwIjoxNjM1MzQ1NTMxfQ.FK1glvwMjHu9J8P-4n2oXPN_u_fIpQZ-F_s5x_4WLag"
+
+  }
+
+}
+
+Send Update Subscription Link
+
+Email a customer a link for updating the card on their subscription
+Headers
+authorization
+String
+	Set value to Bearer SECRET_KEY
+Path Parameters
+code
+String
+	Subscription code
+POST/subscription/:code/manage/email/
+cURL
+
+#!/bin/sh
+
+url="https://api.paystack.co/subscription/{code}/manage/email"
+
+authorization="Authorization: Bearer YOUR_SECRET_KEY"
+
+
+curl "$url" -H "$authorization" -X POST
+
+Sample Response
+200 Ok
+
+{
+
+  "status": true,
+
+  "message": "Email successfully sent"
+
+} this are updated information from paystack documentation, now create a working subscription payment with all the encessary information, now rewrite the codes and subscriptions service without forgwtting any detail supplied in this prompt also noting how a user can check information of subscription,recurring, pause subsription with information saved to database and all that. 

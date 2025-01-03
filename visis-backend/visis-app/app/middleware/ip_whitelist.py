@@ -63,7 +63,7 @@ from fastapi.responses import JSONResponse
 RENDER_PORT = os.getenv("PORT", "10000")  # Default to 10000 if not set
 
 # Allow access for frontend ports and the dynamically assigned Render port
-ALLOWED_PORTS = ["8081", "3000", RENDER_PORT]
+ALLOWED_PORTS = ["8081", "3000", "8000", RENDER_PORT]
 
 async def validate_ip(request: Request, call_next):
     # Exempt the /donations/callback endpoint from port validation

@@ -28,7 +28,7 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from app.database import Base
-from datetime import datetime
+from datetime import datetime, timezone
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
@@ -44,3 +44,8 @@ class Subscription(Base):
     subscription_metadata = Column(JSON, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="subscriptions")
+    subscription_code = Column(String, unique=True, index=True, nullable=False)
+    transaction_data = Column(JSON, nullable=True)  # Store entire transaction response and logs
+
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))

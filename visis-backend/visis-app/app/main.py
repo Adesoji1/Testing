@@ -1,5 +1,6 @@
+# 
 # app/main.py
-
+import os
 import logging
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -15,13 +16,26 @@ from app.api.endpoints.admin import admin_users, admin_documents, admin_settings
 from app.api.endpoints.user import auth, documents, bookmarks, preferences, scanning, languages, activities
 from app.api.endpoints.user.donations import router as donations_router
 from app.api.endpoints.user.transactions import router as transactions_router
-from app.api.endpoints.user.subscriptions import router as subscriptions_router
+from app.api.endpoints.user.subscriptions import router as subscription_router
+# from app.api.endpoints.user.subscriptions import router as subscriptions_router
 from app.api.endpoints.search_document import router as search_document_router
+from app.api.endpoints.payment_callback import router as callback_router
 from app.api.endpoints.user. donations_public  import public_router as donations_public_router
 from app.api.endpoints.user.transactions_public import public_router as transactions_public_router
-from fastapi.responses import Response
+from app.api.endpoints.user import pdfreader, audiobook
+from app.api.endpoints.search_document import router as search_router
+from app.api.endpoints.invoice_webhook import router as invoice_webhook_router
+from fastapi.responses import Response, FileResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.staticfiles import StaticFiles
+from app.api.endpoints.user import views as views_endpoint
+from app.api.endpoints.user.bank import router as bank_router
+
+
+
+
+
 
 # Configure logging with a default level (INFO)
 logging.basicConfig(
@@ -35,10 +49,13 @@ logger = logging.getLogger(__name__)
 
 # Initialize the FastAPI application
 app = FastAPI(
-    title="Unified App API",
+    title="Vinsighte App API",
     description="A comprehensive API combining Paystack integration, user, and admin endpoints.",
     version="1.0.0",
 )
+
+# Mount the static directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Initialize database
 init_db()
@@ -47,6 +64,7 @@ init_db()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8081",
@@ -56,11 +74,23 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
+
+
+
 # Add IP validation middleware
 app.middleware("http")(validate_ip)
 
 # Add rate limiting
 add_rate_limiting(app)
+
+# @app.get("/favicon.ico", include_in_schema=False)
+# async def favicon():
+#     return FileResponse(os.path.join("static", "favicon.ico"))
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("static/favicon.ico")
+
 
 # Log all incoming requests
 @app.middleware("http")
@@ -88,17 +118,21 @@ app.include_router(languages.router)
 app.include_router(activities.router)
 app.include_router(donations_router)
 app.include_router(transactions_router)
-app.include_router(subscriptions_router)
+app.include_router(subscription_router, tags=["subscription"])
 app.include_router(search_document_router)
-
-
-
+app.include_router(pdfreader.router, tags=["pdfreader"], prefix="/user")
+app.include_router(audiobook.router, tags=["audiobook"], prefix="/user")
+app.include_router(search_router, tags=["search"])
+app.include_router(invoice_webhook_router)
+app.include_router(callback_router, tags=["callback"])
+app.include_router(views_endpoint.router)
+app.include_router(bank_router) 
 
 # Root endpoint
 @app.get("/")
 async def root():
     logger.info("Root endpoint accessed")
-    return {"message": "Welcome to the Unified App API"}
+    return {"message": "Welcome to the Visis App API"}
 
 # Custom error handlers
 @app.exception_handler(404)

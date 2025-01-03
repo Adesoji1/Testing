@@ -32,5 +32,6 @@ class ScanningHistory(Base):
     scan_content = Column(String, nullable=False)  # Analysis text
     scan_date = Column(DateTime, nullable=False)
     audio_url = Column(String, nullable=True)  # Add this column for audio file URLs
+    base64_image = Column(String, nullable=True)
 
     user = relationship("User", back_populates="scanning_history")

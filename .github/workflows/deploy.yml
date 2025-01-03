@@ -4,95 +4,9 @@
 #   push:
 #     branches: [ "main" ]
 
-# good jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout repository (optional)
-#         uses: actions/checkout@v2
-
-#       - name: Install Docker Compose on EC2
-#         uses: appleboy/ssh-action@v0.1.10
-#         with:
-#           host: ${{ secrets.EC2_HOST }}
-#           username: ${{ secrets.EC2_USER }}
-#           key: ${{ secrets.EC2_SSH_KEY }}
-#           script: |
-#             # Ensure /usr/local/bin directory exists
-#             sudo mkdir -p /usr/local/bin
-            
-#             # Update packages
-#             sudo apt-get update -y
-            
-#             # Install curl if not present
-#             sudo apt-get install -y curl
-            
-#             # Install sdocker-compose
-#             sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
-#                  -o /usr/local/bin/docker-compose
-#             sudo chmod +x /usr/local/bin/docker-compose
-#             docker-compose --version
-
-#       - name: Deploy via SSH
-#         uses: appleboy/ssh-action@v0.1.10
-#         with:
-#           host: ${{ secrets.EC2_HOST }}
-#           username: ${{ secrets.EC2_USER }}
-#           key: ${{ secrets.EC2_SSH_KEY }}
-#           script: |
-#             cd /home/ubuntu/fastapi_project
-#             docker-compose pull
-#             docker-compose down
-#             docker-compose up -d --build
-#             docker-compose ps
-
-
-
-name: Deploy to EC2
-
-on:
-  push:
-    branches: [ "main" ]
-
-jobs:
-  deploy:
-    # Run directly on self-hosted runner (the one we configured on EC2)
-    runs-on: self-hosted
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      
-      - name: Show environment
-        run: env
-       #Later add the steps for docker build,login and push from the github folder
-      - name: Pull and Run Containers
-        working-directory: /home/ubuntu/fastapi_project
-        run: |
-          # Pull updated images
-          docker-compose pull
-          # Stop any running containers
-          docker-compose down
-          # Rebuild and run containers in detached mode
-          docker-compose up -d --build
-          # Show running containers
-          docker-compose ps
-      
-      - name: Show Ngrok Logs
-        working-directory: /home/ubuntu/fastapi_project
-        run: |
-          # Display ngrok logs to get the public URL
-          docker-compose logs ngrok
-
-# name: Deploy to EC2
-
-# on:
-#   push:
-#     branches: [ "main" ]
-
 # jobs:
 #   deploy:
-#     # Run directly on self-hosted runner (the one configured on EC2)
+#     # Run directly on self-hosted runner (the one we configured on EC2)
 #     runs-on: self-hosted
 
 #     steps:
@@ -101,37 +15,94 @@ jobs:
       
 #       - name: Show environment
 #         run: env
-
+#        #Later add the steps for docker build,login and push from the github folder
 #       - name: Pull and Run Containers
 #         working-directory: /home/ubuntu/fastapi_project
 #         run: |
-#           # Stop all running containers and remove orphans
-#           docker-compose down --remove-orphans
-#           # Force remove any lingering networks
-#           docker network prune -f
-#           # Rebuild and run containers with the updated compose file
+#           # Pull updated images
+#           docker-compose pull
+#           # Stop any running containers
+#           docker-compose down
+#           # Rebuild and run containers in detached mode
 #           docker-compose up -d --build
 #           # Show running containers
 #           docker-compose ps
-
-#       # - name: Pull and Run Containers
-#       #   working-directory: /home/ubuntu/fastapi_project
-#       #   run: |
-#       #     # Stop all running containers
-#       #     docker-compose down
-#       #     # Force remove the network if it still exists
-#       #     docker network rm fastapi_project_default || true
-#       #     # Rebuild and run containers in detached mode
-#       #     docker-compose up -d --build
-#       #     # Show running containers
-#       #     docker-compose ps
-
- 
-
-#       - name: Show Nginx Logs
+      
+#       - name: Show Ngrok Logs
 #         working-directory: /home/ubuntu/fastapi_project
 #         run: |
-#           # Display Nginx logs to verify deployment
-#           docker logs nginx_proxy
-#           #docker logs $(docker ps -q --filter "ancestor=nginx")
+#           # Display ngrok logs to get the public URL
+#           docker-compose logs ngrok
 
+
+
+
+
+
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Build Docker images and push to Docker Hub
+      - name: Build and Push Docker Images
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+        run: |
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          docker build -t vinsighte/fastapi_app:latest ./Testing/visis-backend/visis-app
+          docker push vinsighte/fastapi_app:latest
+
+      # Step 3: Copy static files to EC2
+      - name: Sync Static Files
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          rsync -e "ssh -o StrictHostKeyChecking=no" -avz ./Testing/visis-backend/visis-app/static/ $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/static/
+
+      # Step 4: Copy docker-compose.local.yml to EC2 and Deploy Docker Compose
+      - name: Copy Docker Compose File and Deploy Containers
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./Testing/visis-backend/visis-app/docker-compose.local.yml $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/docker-compose.yml
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
+            cd /home/ubuntu/fastapi_project &&
+            docker-compose -f docker-compose.yml down --remove-orphans -v &&
+            docker-compose -f docker-compose.yml up -d --build --cpus=\"2.0\" --memory=\"2g\" &&
+            docker-compose ps
+          "
+
+      # Step 5: Check Docker logs
+      - name: Show Logs
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
+            docker logs fastapi_app &&
+            docker logs nginx_proxy
+          "

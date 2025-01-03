@@ -1,4 +1,9 @@
+
+
+
 # # s3_utils.py
+
+
 
 # import boto3
 # from botocore.config import Config
@@ -85,7 +90,7 @@
 #                 detail="Failed to initialize S3 client. Please contact support."
 #             )
 
-#     async def upload_file(
+#     def upload_file(
 #         self,
 #         file_obj: BinaryIO,
 #         bucket: str,
@@ -177,7 +182,7 @@
 #                 detail="Failed to upload file. Please try again later."
 #             )
 
-#     async def delete_file(self, bucket: str, key: str) -> bool:
+#     def delete_file(self, bucket: str, key: str) -> bool:
 #         """Delete a file from S3."""
 #         try:
 #             self.s3_client.delete_object(Bucket=bucket, Key=key)
@@ -185,15 +190,23 @@
 #         except ClientError as e:
 #             logger.error(f"Error deleting file from S3: {str(e)}")
 #             return False
+        
+#     def generate_presigned_url(self, client_method_name,method_parameters=None, expiration=3600, http_method=None):
+#         """Generate a pre-signed URL for an S3 object."""
+#         try:
+#             response = self.s3_client.generate_presigned_url(
+#                 ClientMethod=client_method_name,
+#                 Params=method_parameters,
+#                 ExpiresIn=expiration,
+#                 HttpMethod=http_method
+#             )
+#         except ClientError as e:
+#             logging.error(e)
+#             return None
+#         return response
 
 # # Create a singleton instance
 # s3_handler = S3Handler()
-
-
-
-
-# s3_utils.py
-
 
 
 import boto3
@@ -208,6 +221,7 @@ from fastapi import HTTPException, status
 from typing import Optional, BinaryIO
 import logging
 from app.core.config import settings
+import io
 
 logger = logging.getLogger(__name__)
 
@@ -373,6 +387,37 @@ class S3Handler:
                 detail="Failed to upload file. Please try again later."
             )
 
+    def get_file_content(self, bucket: str, key: str) -> bytes:
+        """
+        Retrieve file content from S3.
+
+        Args:
+            bucket (str): The name of the S3 bucket.
+            key (str): The S3 object key.
+
+        Returns:
+            bytes: The content of the file.
+
+        Raises:
+            HTTPException: If retrieval fails.
+        """
+        try:
+            response = self.s3_client.get_object(Bucket=bucket, Key=key)
+            return response['Body'].read()
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            logger.error(f"ClientError retrieving file from S3: {error_code} - {e.response['Error']['Message']}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to retrieve file content from S3."
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error retrieving file from S3: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to retrieve file content from S3."
+            )
+    
     def delete_file(self, bucket: str, key: str) -> bool:
         """Delete a file from S3."""
         try:
@@ -382,7 +427,7 @@ class S3Handler:
             logger.error(f"Error deleting file from S3: {str(e)}")
             return False
         
-    def generate_presigned_url(self, client_method_name,method_parameters=None, expiration=3600, http_method=None):
+    def generate_presigned_url(self, client_method_name, method_parameters=None, expiration=3600, http_method=None):
         """Generate a pre-signed URL for an S3 object."""
         try:
             response = self.s3_client.generate_presigned_url(
@@ -392,9 +437,12 @@ class S3Handler:
                 HttpMethod=http_method
             )
         except ClientError as e:
-            logging.error(e)
+            logger.error(e)
             return None
         return response
+    
+
+
 
 # Create a singleton instance
 s3_handler = S3Handler()

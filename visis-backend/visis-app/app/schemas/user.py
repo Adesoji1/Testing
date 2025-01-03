@@ -1,10 +1,12 @@
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
+from enum import Enum
 # from app.schemas.token import TokenData
 
+class SubscriptionType(str, Enum):
+    free = "free"
+    premium = "premium"
 
-# class TokenData(BaseModel):
-#     username: str | None = None  # Changed from user_id to username
 
 class UserBase(BaseModel):
     username: str
@@ -22,6 +24,7 @@ class UserResponse(UserBase):
     email: EmailStr
     is_active: bool
     is_admin: bool
+    subscription_type: SubscriptionType
 
     class Config:
         # orm_mode = True

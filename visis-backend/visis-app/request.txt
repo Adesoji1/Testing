@@ -1,0 +1,127 @@
+
+.(venv) adesoji@adesoji-Lenovo-Legion-7-15IMH05:~/Documents/Visis_revisions/Visiszipnov26$ ls
+alembic  app  docker-compose.yml  Dockerfile  ee.txt  __init__.py  logs  README.md  redistest.py  requirements.txt  scripts  tests  venv
+(venv) adesoji@adesoji-Lenovo-Legion-7-15IMH05:~/Documents/Visis_revisions/Visiszipnov26$ cd app
+(venv) adesoji@adesoji-Lenovo-Legion-7-15IMH05:~/Documents/Visis_revisions/Visiszipnov26/app$ tree
+├── api
+│   └── endpoints
+│       ├── admin
+│       │   ├── admin_documents.py
+│       │   ├── admin_settings.py
+│       │   ├── admin_users.py
+│       │   ├── __init__.py
+
+│       ├── preference.py
+│       ├── __pycache__
+│       │   └── search_document.cpython-311.pyc
+│       ├── search_document.py
+│       └── user
+│           ├── accessibility.py
+│           ├── activities.py
+│           ├── audiobooks.py
+│           ├── auth.py
+│           ├── bookmarks.py
+│           ├── documents.py
+│           ├── donations_public.py
+│           ├── donations.py
+│           ├── feedback.py
+│           ├── __init__.py
+│           ├── languages.py
+│           ├── ocr.py
+│           ├── preferences.py
+│           
+│           ├── scanning.py
+│           ├── subscriptions.py
+│           ├── system.py
+│           ├── transactions_public.py
+│           ├── transactions.py
+│           └── tts.py
+├── core
+│   ├── cache.py
+│   ├── celery_app.py
+│   ├── celery_config.py
+│   ├── config.py
+│   ├── __init__.py
+
+│   └── security.py
+├── database.py
+├── __init__.py
+├── main.py
+├── middleware
+│   ├── ip_whitelist.py
+│   └── rate_limiter.py
+├── models
+│   ├── accessibility.py
+│   ├── app_setting.py
+│   ├── audiobook_language.py
+│   ├── audiobook.py
+│   ├── blacklist.py
+│   ├── document_language.py
+│   ├── document.py
+│   ├── donation.py
+│   ├── feedback.py
+│   ├── __init__.py
+│   ├── language.py
+│   ├── refund.py
+│   ├── scanning_history.py
+│   ├── subscription.py
+│   ├── transaction.py
+│   ├── user_activity.py
+│   ├── user_bookmark.py
+│   ├── user_preference.py
+│   └── user.py
+
+├── schemas
+│   ├── accessibility.py
+│   ├── app_setting.py
+│   ├── audiobook_language.py
+│   ├── audiobook.py
+│   ├── document_language.py
+│   ├── document.py
+│   ├── donation.py
+│   ├── enums.py
+│   ├── feedback.py
+│   ├── __init__.py
+│   ├── language.py
+│   
+│   ├── refund.py
+│   ├── scanning_history.py
+│   ├── subscription.py
+│   ├── token.py
+│   ├── transaction.py
+│   ├── user_activity.py
+│   ├── user_bookmark.py
+│   ├── user_preference.py
+│   └── user.py
+├── services
+│   ├── activity_service.py
+│   ├── audiobook_service.py
+│   ├── blacklist_service.py
+│   ├── bookmark_services.py
+│   ├── celery_tasks.py
+│   ├── document_service.py
+│   ├── donation_service.py
+│   ├── __init__.py
+│   ├── language_services.py
+│   ├── ocr_service.py
+│   ├── preference_services.py
+│  
+│   ├── rekognition_service.py
+│   ├── subscription_service.py
+│   ├── test.py
+│   ├── transaction_service.py
+│   ├── tts_service.py
+│   └── vision_service.py
+└── utils
+    ├── email_utils.py
+    ├── exceptions.py
+    ├── helpers.py
+    ├── image_processing.py
+    ├── __init__.py
+    ├── paystack_utils.py
+   
+    ├── redis_utils.py
+    ├── s3_utils.py
+    └── send_reset_password_email.py
+
+21 directories, 190 files. i have a new feature to add so based on the tree structure, i want to know where to add the new files you create. now  in this audiobook application, we want to make 2 different separation. 1 ,we want to have a pdf reader that will allows users who aren't on any paid plan or subscription to access their audiobook to read out their books anytime they want by uploading txt or pdf or png documents , which later will be converted into audiobook without audio immersive feature from the aws textract to the aws ocr service then to the aws polly for the voice then the user can listen. 2 only the users who have paid can have access to upload up to 5 documents and can receive their audiobooks with audio immersive feature after they have paid, we want to monetize the audiobook feature, i have done some former endpoints that allows multi-upload document or document and the default audiobook of mp3 saved in s3 bucket has audio immersive feature, i have a subscription endpoint that i haven't implemented though i will share the paystack details for transfer and subscription for you to be able to implement these, also the free plan should only allow a user to upload only maximum of 3 books after they have signed in and uploaded books, i am working as the backend engineer that needs to implement faster querying of database, server side logic, efficient cache using redis and fast retrieval of mp3 based on the aws offerings that handle conversion of pdf's into mp3 book and stored as pdf, without breaking the existing application, how can you help me safely integrate these features into the existing application without breaking the former codes and enhancing more features? based on the tree structure, you should have an idea of my existing codes, let me know if you need the current setup of any code for you to be able to proceed with this implementation let me know or proceed to implement, any endpoint, a user must sign up first before they can use it, only the admin endpoint allows for user to be able to do anything after authentication, should you need me to share any existing code or service or yuiliy or python code or schema or any endpoint router post ,get or delete for you to know how to structure the new full files expected to generate, let me know before you begin creation of the new codes for the new features, advise on the existing codes or schema or service you want to see or upload or whatever, i will share then after that, you will proceed to creating the new codes without error

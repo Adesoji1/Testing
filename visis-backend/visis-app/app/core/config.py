@@ -45,24 +45,13 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30, description="Access token expiry")
     REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7, description="Refresh token expiry")
 
-    # #localhost
-    # REDIS_HOST: str = "localhost"
-    # REDIS_PORT: int = 6379
-    # REDIS_DB: int = 0
-    # REDIS_CACHE_TTL: int = 80640 # Cache TTL in seconds (e.g., 55 days)
-    
-    ##prod
-    REDIS_HOST: str = Field(..., env='REDIS_HOST')
-    REDIS_PORT: int = Field(6379, env='REDIS_PORT')
-    REDIS_PASSWORD: Optional[str] = Field(None, env='REDIS_PASSWORD')
-    REDIS_DB: int = Field(0, env='REDIS_DB')
-    REDIS_CACHE_TTL: int = Field(300, env='REDIS_CACHE_TTL')  # 
-    # REDIS_HOST: str
-    # REDIS_PORT: int = 6379
-    # REDIS_PASSWORD: Optional[str] = None
-    # REDIS_DB: int = 0
-    # REDIS_CACHE_TTL: int = 300 # Cache TTL in seconds (e.g., 55 days)
-    
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    # REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    # REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
+    # REDIS_DB: int = int(os.getenv("REDIS_DB", 0))
+    REDIS_CACHE_TTL: int = 80640 # Cache TTL in seconds (e.g., 55 days)
 
     #Paystack configuration
     PAYSTACK_SECRET_KEY: str = os.getenv("PAYSTACK_SECRET_KEY")

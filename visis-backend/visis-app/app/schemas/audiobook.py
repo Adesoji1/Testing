@@ -13,6 +13,9 @@ class AudioBookBase(BaseModel):
     file_key: str  # Use file_key instead of file_path
     is_dolby_atmos_supported: bool
     url: str
+     
+    class Config:
+        orm_mode = True
 
 class AudioBookCreate(BaseModel):
     title: str
@@ -49,13 +52,13 @@ class AudioBookResponse(BaseModel):
     author: str
     url: str
     is_dolby_atmos_supported: bool
+    document_id: int
+    
 
-    model_config = {
-        "from_attributes": True  # Pydantic v2.x configuration
-    }
+    class Config:
+        orm_mode = True
 
-# class AudioBookResponse(AudioBookBase):
-#     id: int
+    # model_config = {
+    #     "from_attributes": True  # Pydantic v2.x configuration
+    # }
 
-#     class Config:
-#         orm_mode = True

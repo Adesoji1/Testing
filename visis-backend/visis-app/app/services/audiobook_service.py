@@ -15,121 +15,33 @@ from pydub import AudioSegment
 logger = logging.getLogger(__name__)
 
 
-
-# def create_audiobook(
-#     db: Session,
-#     audiobook: AudioBookCreate,
-#     file_path: Optional[str] = None,
-# ) -> Audiobook:
-#     """
-#     Create a new audiobook record in the database and optionally process the audio file.
-
-#     Args:
-#         db (Session): Database session.
-#         audiobook (AudioBookCreate): Audiobook schema.
-#         file_path (Optional[str]): Path to the local audio file for processing.
-
-#     Returns:
-#         Audiobook: Created audiobook object.
-#     """
-#     try:
-#         # Process the audio file locally if `file_path` is provided
-#         if file_path:
-#             processed_file_path = f"{file_path}_processed.mp3"
-#             audio = AudioSegment.from_file(file_path, format="mp3")
-#             audio.export(processed_file_path, format="mp3")
-            
-#             # Clean up the local file
-#             os.remove(file_path)
-
-#             # Upload processed file to S3
-#             processed_audio_key = audiobook.file_key  # Use the `file_key` from the schema
-#             processed_audio_url = s3_handler.upload_file(
-#                 file_obj=open(processed_file_path, "rb"),
-#                 bucket=settings.S3_BUCKET_NAME,
-#                 key=processed_audio_key,
-#                 content_type="audio/mpeg",
-#             )
-
-#             if not processed_audio_url:
-#                 raise HTTPException(
-#                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#                     detail="Failed to upload processed audio to S3",
-#                 )
-            
-#             # Update the audiobook URL with the processed audio URL
-#             audiobook.url = processed_audio_url
-
-#             # Remove the processed local file
-#             os.remove(processed_file_path)
-
-#         # Create the audiobook record in the database
-#         db_audiobook = Audiobook(
-#             title=audiobook.title,
-#             author=audiobook.author,
-#             narrator=audiobook.narrator,
-#             duration=audiobook.duration,
-#             genre=audiobook.genre,
-#             publication_date=audiobook.publication_date,
-#             file_key=audiobook.file_key,
-#             url=audiobook.url,
-#             is_dolby_atmos_supported=audiobook.is_dolby_atmos_supported,
-#             document_id=audiobook.document_id,  # Set the document ID
-#         )
-#         db.add(db_audiobook)
-#         db.commit()
-#         db.refresh(db_audiobook)
-
-#         return db_audiobook
-#     except Exception as e:
-#         db.rollback()
-#         logger.error(f"Error creating audiobook: {str(e)}")
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail="Failed to create audiobook record",
-#         )
-
-def create_audiobook(
-    db: Session,
-    audiobook: AudioBookCreate,
-) -> Audiobook:
-    """
-    Create a new audiobook record in the database.
-
-    Args:
-        db (Session): Database session.
-        audiobook (AudioBookCreate): Audiobook data.
-
-    Returns:
-        Audiobook: Created audiobook object.
-    """
+def create_audiobook(db: Session, audiobook_data: AudioBookCreate) -> Audiobook:
+    """Create a new Audiobook record in the database."""
     try:
-        # Create the audiobook record in the database
-        db_audiobook = Audiobook(
-            title=audiobook.title,
-            author=audiobook.author,
-            narrator=audiobook.narrator,
-            duration=audiobook.duration,
-            genre=audiobook.genre,
-            publication_date=audiobook.publication_date,
-            file_key=audiobook.file_key,
-            url=audiobook.url,
-            is_dolby_atmos_supported=audiobook.is_dolby_atmos_supported,
-            document_id=audiobook.document_id,
+        audiobook = Audiobook(
+            title=audiobook_data.title,
+            author=audiobook_data.author,
+            narrator=audiobook_data.narrator,
+            duration=audiobook_data.duration,
+            genre=audiobook_data.genre,
+            publication_date=audiobook_data.publication_date,
+            file_key=audiobook_data.file_key,
+            is_dolby_atmos_supported=audiobook_data.is_dolby_atmos_supported,
+            url=audiobook_data.url,
+            document_id=audiobook_data.document_id
         )
-        db.add(db_audiobook)
+        db.add(audiobook)
         db.commit()
-        db.refresh(db_audiobook)
-
-        return db_audiobook
+        db.refresh(audiobook)
+        logger.info(f"Audiobook created with ID {audiobook.id} for Document ID {audiobook.document_id}.")
+        return audiobook
     except Exception as e:
         db.rollback()
         logger.error(f"Error creating audiobook: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create audiobook record",
+            detail=f"Failed to create audiobook: {str(e)}"
         )
-
 
 
 def get_audiobooks(
