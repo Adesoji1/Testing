@@ -99,6 +99,8 @@ jobs:
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          rsync -e "ssh -o StrictHostKeyChecking=no" -avz ./visis-backend/visis-app/nginx.conf $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/nginx.conf
+          rsync -e "ssh -o StrictHostKeyChecking=no" -avz ./visis-backend/visis-app/static/ $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/static/
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/docker-compose.local.yml $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/docker-compose.yml
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/Dockerfile $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/Dockerfile
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
