@@ -86,6 +86,8 @@ services:
     environment:
       - REDIS_HOST=redis  # Use the Docker service name "redis"
       - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_CACHE_TTL=80640
     depends_on:
       - redis
     networks:
