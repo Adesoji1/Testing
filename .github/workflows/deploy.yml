@@ -35,6 +35,98 @@
 #           docker-compose logs ngrok
 
 
+# name: Deploy to EC2
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   deploy:
+#     runs-on: self-hosted
+
+#     steps:
+#       # Step 1: Check out the code
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       # Step 2: Build Docker images and push to Docker Hub
+#       - name: Build and Push Docker Images
+#         env:
+#           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+#           DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+#         run: |
+#           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+#           docker build -t adesojialu/visiszipnov26_app:latest ./visis-backend/visis-app
+#           docker push adesojialu/visiszipnov26_app:latest
+
+#       # Step 3: Copy static files to EC2
+#       - name: Sync Static Files
+#         env:
+#           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+#           EC2_HOST: ${{ secrets.EC2_HOST }}
+#           EC2_USER: ${{ secrets.EC2_USER }}
+#         run: |
+#           mkdir -p ~/.ssh
+#           echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+#           chmod 600 ~/.ssh/id_rsa
+#           rsync -e "ssh -o StrictHostKeyChecking=no" -avz ./visis-backend/visis-app/static/ $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/static/
+
+#       # Step 4: Clean up Docker environment on EC2
+#       - name: Clean Up Docker Environment
+#         env:
+#           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+#           EC2_HOST: ${{ secrets.EC2_HOST }}
+#           EC2_USER: ${{ secrets.EC2_USER }}
+#         run: |
+#           mkdir -p ~/.ssh
+#           echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+#           chmod 600 ~/.ssh/id_rsa
+#           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
+#             docker-compose -f /home/ubuntu/fastapi_project/docker-compose.yml down --remove-orphans -v || true &&
+#             docker system prune -f --volumes || true &&
+#             docker volume prune -f || true
+#           "
+
+#       # Step 5: Copy docker-compose.local.yml to EC2 and Deploy Docker Compose
+#       - name: Copy Docker Compose File and Deploy Containers
+#         env:
+#           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+#           EC2_HOST: ${{ secrets.EC2_HOST }}
+#           EC2_USER: ${{ secrets.EC2_USER }}
+#         run: |
+#           mkdir -p ~/.ssh
+#           echo "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+#           chmod 600 ~/.ssh/id_rsa
+#           rsync -e "ssh -o StrictHostKeyChecking=no" -avz ./visis-backend/visis-app/nginx.conf $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/nginx.conf
+#           rsync -e "ssh -o StrictHostKeyChecking=no" -avz ./visis-backend/visis-app/static/ $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/static/
+#           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/docker-compose.local.yml $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/docker-compose.yml
+#           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/Dockerfile $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/Dockerfile
+#           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
+#             cd /home/ubuntu/fastapi_project &&
+#             docker-compose -f docker-compose.yml up -d --build  &&
+#             docker-compose ps
+#           "
+
+#       # Step 6: Check Docker logs
+#       - name: Show Logs
+#         env:
+#           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+#           EC2_HOST: ${{ secrets.EC2_HOST }}
+#           EC2_USER: ${{ secrets.EC2_USER }}
+#         run: |
+#           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
+#             docker logs fastapi_app || echo 'fastapi_app logs unavailable' &&
+#             docker logs nginx_proxy || echo 'nginx_proxy logs unavailable'
+#           "
+
+          #   docker-compose -f docker-compose.yml up -d --build --cpus=\"2.0\" --memory=\"2g\" &&
+          #   docker-compose ps &&
+          #   docker logs fastapi_app || echo 'fastapi_app logs unavailable' &&
+          #   docker logs nginx_proxy || echo 'nginx_proxy logs unavailable'
+          # "
+
 name: Deploy to EC2
 
 on:
@@ -89,8 +181,8 @@ jobs:
             docker volume prune -f || true
           "
 
-      # Step 5: Copy docker-compose.local.yml to EC2 and Deploy Docker Compose
-      - name: Copy Docker Compose File and Deploy Containers
+      # Step 5: Copy Docker Compose File, Dockerfile, and Requirements to EC2
+      - name: Copy Config Files and Deploy Containers
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -103,9 +195,10 @@ jobs:
           rsync -e "ssh -o StrictHostKeyChecking=no" -avz ./visis-backend/visis-app/static/ $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/static/
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/docker-compose.local.yml $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/docker-compose.yml
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/Dockerfile $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/Dockerfile
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/requirements.txt $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/requirements.txt
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
             cd /home/ubuntu/fastapi_project &&
-            docker-compose -f docker-compose.yml up -d --build  &&
+            docker-compose -f docker-compose.yml up -d --build &&
             docker-compose ps
           "
 
@@ -121,9 +214,4 @@ jobs:
             docker logs nginx_proxy || echo 'nginx_proxy logs unavailable'
           "
 
-            docker-compose -f docker-compose.yml up -d --build --cpus=\"2.0\" --memory=\"2g\" &&
-            docker-compose ps &&
-            docker logs fastapi_app || echo 'fastapi_app logs unavailable' &&
-            docker logs nginx_proxy || echo 'nginx_proxy logs unavailable'
-          "
 
