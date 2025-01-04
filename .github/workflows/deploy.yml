@@ -35,6 +35,7 @@
 #           docker-compose logs ngrok
 
 
+
 # name: Deploy to EC2
 
 # on:
@@ -89,8 +90,8 @@
 #             docker volume prune -f || true
 #           "
 
-#       # Step 5: Copy docker-compose.local.yml to EC2 and Deploy Docker Compose
-#       - name: Copy Docker Compose File and Deploy Containers
+#       # Step 5: Copy Docker Compose File, Dockerfile, and Requirements to EC2
+#       - name: Copy Config Files and Deploy Containers
 #         env:
 #           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
 #           EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -103,9 +104,10 @@
 #           rsync -e "ssh -o StrictHostKeyChecking=no" -avz ./visis-backend/visis-app/static/ $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/static/
 #           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/docker-compose.local.yml $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/docker-compose.yml
 #           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/Dockerfile $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/Dockerfile
+#           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/requirements.txt $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/requirements.txt
 #           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
 #             cd /home/ubuntu/fastapi_project &&
-#             docker-compose -f docker-compose.yml up -d --build  &&
+#             docker-compose -f docker-compose.yml up -d --build &&
 #             docker-compose ps
 #           "
 
@@ -121,11 +123,6 @@
 #             docker logs nginx_proxy || echo 'nginx_proxy logs unavailable'
 #           "
 
-          #   docker-compose -f docker-compose.yml up -d --build --cpus=\"2.0\" --memory=\"2g\" &&
-          #   docker-compose ps &&
-          #   docker logs fastapi_app || echo 'fastapi_app logs unavailable' &&
-          #   docker logs nginx_proxy || echo 'nginx_proxy logs unavailable'
-          # "
 
 name: Deploy to EC2
 
@@ -196,13 +193,33 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/docker-compose.local.yml $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/docker-compose.yml
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/Dockerfile $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/Dockerfile
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/requirements.txt $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/requirements.txt
+
+      # Step 6: Update Docker Compose Volumes
+      - name: Update Docker Compose Volumes
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
+            sed -i 's#./visis-app/nginx.conf#/home/ubuntu/fastapi_project/nginx.conf#g' /home/ubuntu/fastapi_project/docker-compose.yml &&
+            sed -i 's#./visis-app/static#/home/ubuntu/fastapi_project/static#g' /home/ubuntu/fastapi_project/docker-compose.yml
+          "
+
+      # Step 7: Start Containers
+      - name: Start Containers
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
             cd /home/ubuntu/fastapi_project &&
             docker-compose -f docker-compose.yml up -d --build &&
             docker-compose ps
           "
 
-      # Step 6: Check Docker logs
+      # Step 8: Check Docker logs
       - name: Show Logs
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
