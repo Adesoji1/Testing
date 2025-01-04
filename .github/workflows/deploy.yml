@@ -102,7 +102,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./visis-backend/visis-app/docker-compose.local.yml $EC2_USER@$EC2_HOST:/home/ubuntu/fastapi_project/docker-compose.yml
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa $EC2_USER@$EC2_HOST "
             cd /home/ubuntu/fastapi_project &&
-            docker-compose -f docker-compose.yml up -d --build --cpus=\"2.0\" --memory=\"2g\" &&
+            docker-compose -f docker-compose.yml up -d --build  &&
             docker-compose ps
           "
 
