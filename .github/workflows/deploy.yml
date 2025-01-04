@@ -4,7 +4,7 @@
 #   push:
 #     branches: [ "main" ]
 
-# jobs:
+# job:
 #   deploy:
 #     # Run directly on self-hosted runner (the one we configured on EC2)
 #     runs-on: self-hosted
