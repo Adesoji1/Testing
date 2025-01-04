@@ -73,12 +73,12 @@ services:
     restart: always
 
   fastapi_app:
-    build: .
-    # image: adesojialu/visiszipnov26_app:latest  # Use the Docker Hub image
+    # build: .
+    image: adesojialu/visiszipnov26_app:latest  # Use the Docker Hub image
     container_name: fastapi_app
     command: gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 2 --threads 2 --timeout 1001 --keep-alive 1001
-    volumes:
-      - .:/app
+    # volumes:
+    #   - .:/app
     env_file:
       - .env
     ports:
@@ -100,7 +100,7 @@ services:
     ports:
       - "80:80"  # Exposing Nginx on port 80
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./visis-app/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./visis-app/static:/usr/share/nginx/html/static:ro
     networks:
       - app_network
