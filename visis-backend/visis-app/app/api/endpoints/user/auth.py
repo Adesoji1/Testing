@@ -17,6 +17,7 @@ from app.utils.send_reset_password_email import send_reset_password_email  # Ema
 import logging
 from app.utils.email_utils import send_email
 from app.models.user import User, SubscriptionType
+from app.utils.s3_utils import s3_handler
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -564,6 +565,126 @@ async def logout(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while logging out."
         )
+
+
+@router.delete("/delete-user", status_code=200)
+def delete_current_user(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Permanently delete the currently authenticated user and all their associated data:
+      - Documents (PDF, DOCX, etc.)
+      - Generated MP3 files in S3
+      - Audiobooks (and their S3 files)
+      - Bookmarks, preferences, scanning history, accessibility, activities, feedbacks,
+        donations, transactions, subscriptions, and refunds, etc.
+      - Finally, delete the user record itself.
+
+    **Note**:
+    - `Refund` already has `cascade="all, delete-orphan"`, so it will be deleted automatically
+      once the user is removed.
+
+    **Authentication**:
+    - User must be logged in with a valid Bearer token.
+
+    **Important**:
+    - This action is irreversible.
+
+    ---
+    **Example cURL Request**:
+    ```bash
+    curl -X DELETE "http://localhost:8000/user/delete-user" \
+         -H "Authorization: Bearer YOUR_JWT_ACCESS_TOKEN" \
+         -H "Content-Type: application/json"
+    ```
+
+    **Example Response**:
+    ```json
+    {
+      "message": "Your User account and all associated data have been deleted successfully."
+    }
+    ```
+    """
+    try:
+        # 1) Re-fetch user from DB in case we need fresh relationships
+        user = db.query(User).filter(User.id == current_user.id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found."
+            )
+
+        # 2) Delete associated documents and S3 files
+        for document in user.documents:
+            # Delete the original file (e.g., PDF, DOCX) from S3
+            if document.file_key:
+                s3_handler.delete_file(settings.S3_BUCKET_NAME, document.file_key)
+
+            # Delete the generated audio file from S3, if present
+            if document.audio_key:
+                s3_handler.delete_file(settings.S3_BUCKET_NAME, document.audio_key)
+
+            # Also handle Audiobook if it exists
+            if document.audiobook:
+                # Remove audiobook file from S3
+                if document.audiobook.file_key:
+                    s3_handler.delete_file(settings.S3_BUCKET_NAME, document.audiobook.file_key)
+                db.delete(document.audiobook)  # Or rely on cascade if configured
+
+            # Finally, remove the Document record
+            db.delete(document)
+
+        # 3) Delete any other associated objects NOT covered by cascade="all, delete-orphan"
+        #    Since only 'refunds' has cascade, everything else must be removed explicitly.
+
+        for bookmark in user.bookmarks:
+            db.delete(bookmark)
+
+        for preference in user.preferences:
+            db.delete(preference)
+
+        for history in user.scanning_history:
+            db.delete(history)
+
+        for access in user.accessibility:
+            db.delete(access)
+
+        for activity in user.activities:
+            db.delete(activity)
+
+        for feedback in user.feedbacks:
+            db.delete(feedback)
+
+        for donation in user.donations:
+            db.delete(donation)
+
+        for transaction in user.transactions:
+            db.delete(transaction)
+
+        for subscription in user.subscriptions:
+            db.delete(subscription)
+
+        # `refunds` are automatically removed due to cascade="all, delete-orphan".
+        # No manual deletion needed.
+
+        # 4) Delete the user record itself
+        db.delete(user)
+        db.commit()
+
+        return {"message": " Your User account and all associated data have been deleted successfully."}
+
+    except HTTPException:
+        # Pass along explicit HTTPExceptions
+        raise
+    except Exception as e:
+        db.rollback()  # Roll back any partial transaction
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete user account: {str(e)}"
+        )
+
+
 
 
 # #Change subscription type route

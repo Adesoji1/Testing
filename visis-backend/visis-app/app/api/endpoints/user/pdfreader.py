@@ -183,7 +183,7 @@ from typing import List
 # from app.core.config import settings
 # from app.database import get_db
 # from app.core.security import get_current_user
-# from app.models import User,Document
+from app.models import User,Document
 from app.schemas import DocumentResponse, DocumentCreate
 
 
@@ -330,3 +330,70 @@ def get_my_pdfs(db: Session = Depends(get_db), current_user: User = Depends(get_
     from app.services.document_service import get_documents
     documents = get_documents(db, user_id=current_user.id, filter_params=DocumentFilter(), skip=0, limit=50)
     return documents
+
+
+
+@router.delete("/pdfreader/{document_id}", status_code=status.HTTP_200_OK, summary="Delete a single PDF")
+def delete_pdf(
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Delete a single PDF (or any Document) owned by the current user.
+
+    **Authentication**:
+    - User must be logged in with a valid Bearer token.
+
+    **Restrictions**:
+    - Only `free` users can access this endpoint (as indicated by your code).
+
+    ---
+    **Example cURL Request**:
+    ```bash
+    curl -X DELETE "http://localhost:8000/user/pdfreader/123" \
+         -H "Authorization: Bearer YOUR_JWT_ACCESS_TOKEN" \
+         -H "Content-Type: application/json"
+    ```
+
+    **Example Response**:
+    ```json
+    {
+      "message": "Document 123 has been deleted successfully."
+    }
+    ```
+    """
+    # Ensure the user is free
+    if current_user.subscription_type != SubscriptionType.free:
+        raise HTTPException(status_code=403, detail="Endpoint reserved for free users.")
+
+    # Fetch the document, ensuring it belongs to current_user
+    document = (
+        db.query(Document)
+        .filter(Document.id == document_id, Document.user_id == current_user.id)
+        .first()
+    )
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document {document_id} not found or not owned by you."
+        )
+
+    # Remove from S3 if applicable
+    if document.file_key:
+        s3_handler.delete_file(settings.S3_BUCKET_NAME, document.file_key)
+
+    if document.audio_key:
+        s3_handler.delete_file(settings.S3_BUCKET_NAME, document.audio_key)
+
+    # Also handle Audiobook if it exists
+    if document.audiobook:
+        if document.audiobook.file_key:
+            s3_handler.delete_file(settings.S3_BUCKET_NAME, document.audiobook.file_key)
+        db.delete(document.audiobook)
+
+    # Finally, delete the Document record from DB
+    db.delete(document)
+    db.commit()
+
+    return {"message": f"Document {document_id} has been deleted successfully."}
