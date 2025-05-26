@@ -338,11 +338,12 @@ class S3Handler:
                 }
             )
             
-            # Generate pre-signed URL valid for 1 hour
+            # Generate pre-signed URL valid for 1 year
             url = self.s3_client.generate_presigned_url(
                 ClientMethod='get_object',
                 Params={'Bucket': bucket, 'Key': key},
-                ExpiresIn=3600
+                #ExpiresIn=3600
+                ExpiresIn=31536000
             )
             
             return url
